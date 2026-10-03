@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Optional,
+  Logger,
 } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { AnalyticsSchedulerService } from './services/analytics-scheduler.service';
@@ -20,6 +21,8 @@ import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 @Controller('analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AnalyticsController {
+  private readonly logger = new Logger(AnalyticsController.name);
+
   constructor(
     private readonly analyticsService: AnalyticsService,
     @Optional()
@@ -31,7 +34,7 @@ export class AnalyticsController {
    * Current occupancy rate, average time-to-fill, and revenue snapshot.
    */
   @Get('overview')
-  @Roles(UserRole.OWNER, UserRole.OFFICE_STAFF)
+  @Roles(UserRole.OWNER, UserRole.SUPER_ADMIN)
   async getOverview(@CurrentUser() user: JwtPayload) {
     const overview = await this.analyticsService.getOverview(user.tenantId!);
     return {
@@ -45,7 +48,7 @@ export class AnalyticsController {
    * Revenue trend, average time-to-fill trend, and occupancy rate trend.
    */
   @Get('monthly-trend')
-  @Roles(UserRole.OWNER, UserRole.OFFICE_STAFF)
+  @Roles(UserRole.OWNER, UserRole.SUPER_ADMIN)
   async getMonthlyTrend(
     @CurrentUser() user: JwtPayload,
     @Query('limit') limit?: string
@@ -73,14 +76,20 @@ export class AnalyticsController {
     @CurrentUser() user?: JwtPayload
   ) {
     if (isAsync === 'true' && this.schedulerService) {
-      const enqueued = await this.schedulerService.triggerRefreshNow(
-        user?.email || 'admin'
-      );
-      return {
-        success: true,
-        message: 'Materialized view refresh enqueued as background BullMQ job.',
-        data: enqueued,
-      };
+      try {
+        const enqueued = await this.schedulerService.triggerRefreshNow(
+          user?.email || 'admin'
+        );
+        return {
+          success: true,
+          message: 'Materialized view refresh enqueued as background BullMQ job.',
+          data: enqueued,
+        };
+      } catch (err: any) {
+        this.logger.warn(
+          `Async refresh fallback: ${err.message}. Running synchronous materialized view refresh.`
+        );
+      }
     }
 
     const result = await this.analyticsService.refreshMaterializedViews();
@@ -115,7 +124,7 @@ export class AnalyticsController {
    * Clear dashboard Redis cache for the current tenant.
    */
   @Post('cache/clear')
-  @Roles(UserRole.OWNER, UserRole.OFFICE_STAFF)
+  @Roles(UserRole.OWNER, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   async clearCache(@CurrentUser() user: JwtPayload) {
     await this.analyticsService.invalidateTenantCache(user.tenantId!);

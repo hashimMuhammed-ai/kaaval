@@ -10,6 +10,14 @@ import { AnalyticsSchedulerService } from './services/analytics-scheduler.servic
 import { AnalyticsCacheService } from './services/analytics-cache.service';
 import { ANALYTICS_REFRESH_QUEUE } from './constants/analytics.constants';
 
+const isAnalyticsWorkerEnabled =
+  process.env.ENABLE_ANALYTICS_WORKER !== 'false' &&
+  process.env.ENABLE_ANALYTICS_WORKER !== '0';
+
+const workerProviders = isAnalyticsWorkerEnabled
+  ? [AnalyticsRefreshProcessor]
+  : [];
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -23,9 +31,9 @@ import { ANALYTICS_REFRESH_QUEUE } from './constants/analytics.constants';
   controllers: [AnalyticsController],
   providers: [
     AnalyticsService,
-    AnalyticsRefreshProcessor,
     AnalyticsSchedulerService,
     AnalyticsCacheService,
+    ...workerProviders,
   ],
   exports: [
     AnalyticsService,

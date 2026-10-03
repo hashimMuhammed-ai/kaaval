@@ -77,5 +77,20 @@ describe('AnalyticsRefreshProcessor', () => {
       const error = new Error('Connection timeout');
       expect(() => processor.onFailed(mockJob, error)).not.toThrow();
     });
+
+    it('should handle onFailed with quota error and throttle log', () => {
+      const mockJob = { id: 'job-103' } as Job;
+      const quotaError = new Error(
+        'ERR max requests limit exceeded. Limit: 500000, Usage: 500004'
+      );
+      expect(() => processor.onFailed(mockJob, quotaError)).not.toThrow();
+    });
+
+    it('should handle onError event gracefully and throttle quota errors', () => {
+      const quotaError = new Error(
+        'ERR max requests limit exceeded. Limit: 500000, Usage: 500004'
+      );
+      expect(() => processor.onError(quotaError)).not.toThrow();
+    });
   });
 });

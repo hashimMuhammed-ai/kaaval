@@ -85,4 +85,16 @@ describe('RequestsController', () => {
       expect(result.data.status).toBe(RequestStatus.CONTACTED);
     });
   });
+
+  describe('update', () => {
+    it('should update request by ID for tenant via PATCH :id', async () => {
+      const user: any = { tenantId: 'tenant-123', role: 'owner' };
+      const dto = { status: RequestStatus.ASSIGNED, assignedCaregiverId: 'cg-1' };
+
+      const result = await controller.update('req-1', dto, user);
+
+      expect(mockRequestsService.updateStatus).toHaveBeenCalledWith('req-1', 'tenant-123', dto);
+      expect(result.success).toBe(true);
+    });
+  });
 });

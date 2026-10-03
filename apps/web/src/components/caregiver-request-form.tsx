@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getSubdomain } from '../utils/subdomain';
+import { getSubdomain, getTenantSlug } from '../utils/subdomain';
+import { KERALA_DISTRICT_NAMES as KERALA_DISTRICTS } from '../constants/kerala';
 
 interface FormData {
   serviceType: string;
@@ -26,23 +27,6 @@ interface FormData {
   isWhatsapp: boolean;
   notes: string;
 }
-
-const KERALA_DISTRICTS = [
-  'Ernakulam (Kochi)',
-  'Thiruvananthapuram',
-  'Thrissur',
-  'Kozhikode',
-  'Kottayam',
-  'Kollam',
-  'Palakkad',
-  'Malappuram',
-  'Alappuzha',
-  'Kannur',
-  'Pathanamthitta',
-  'Idukki',
-  'Kasaragod',
-  'Wayanad',
-];
 
 const SERVICE_TYPES = [
   {
@@ -91,7 +75,7 @@ const SERVICE_TYPES = [
 
 export default function CaregiverRequestForm({
   agencyName: initialAgencyName = 'CareKerala',
-  agencyPhone: initialAgencyPhone = '+919876543210',
+  agencyPhone: initialAgencyPhone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || '+15556354420',
 }: {
   agencyName?: string;
   agencyPhone?: string;
@@ -123,16 +107,19 @@ export default function CaregiverRequestForm({
     mobilityStatus: 'assisted',
     medicalEquipment: 'none',
     contactName: '',
-    relationship: 'son_daughter',
+    relationship: 'son',
     phone: '',
     isWhatsapp: true,
     notes: '',
   });
 
+  const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+
   useEffect(() => {
-    // 1. Check subdomain
-    const sub = getSubdomain();
+    // 1. Check tenant slug (path-based /t/:tenantSlug or subdomain)
+    const sub = getTenantSlug() || getSubdomain();
     if (sub) {
+      setTenantSlug(sub);
       const formatted = sub
         .split('-')
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -235,27 +222,36 @@ export default function CaregiverRequestForm({
       // Post to local API route handler
       const res = await fetch('/api/requests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(tenantSlug ? { 'x-tenant-slug': tenantSlug, 'x-tenant-subdomain': tenantSlug } : {}),
+        },
         body: JSON.stringify({
           ...formData,
           startDate: effectiveStartDate,
           referenceId: generatedRef,
           agencyName,
+          tenantSlug: tenantSlug || undefined,
+          subdomain: tenantSlug || undefined,
         }),
       });
 
       const data = await res.json().catch(() => null);
 
-      if (res.ok && data?.referenceId) {
-        setSubmittedRef(data.referenceId);
+      if (res.ok && (data?.referenceId || data?.data?.referenceId)) {
+        const ref = data.referenceId || data.data?.referenceId || generatedRef;
+        setSubmittedRef(ref);
         if (data?.whatsappNotification) {
           setWhatsappStatus(data.whatsappNotification);
         }
+        setStep(5);
       } else {
-        setSubmittedRef(generatedRef);
+        const errorDetail =
+          data?.message ||
+          (Array.isArray(data?.message) ? data.message.join(', ') : null) ||
+          'Failed to record care request. Please try again or WhatsApp us directly.';
+        setErrorMsg(errorDetail);
       }
-
-      setStep(5);
     } catch (err: any) {
       setErrorMsg(err?.message || 'Failed to submit request. Please try again or WhatsApp us directly.');
     } finally {
@@ -667,7 +663,7 @@ export default function CaregiverRequestForm({
                 id="address-input"
                 name="address"
                 type="text"
-                placeholder="e.g. Kakkanad, Kadavanthra, Aluva"
+                placeholder="e.g. Kakkanad, Kadavanthra, Kaloor (Area only)"
                 className="form-input"
                 value={formData.address}
                 onChange={handleFieldChange}
@@ -786,10 +782,13 @@ export default function CaregiverRequestForm({
                 value={formData.relationship}
                 onChange={handleFieldChange}
               >
-                <option value="son_daughter">Son / Daughter</option>
+                <option value="son">Son</option>
+                <option value="daughter">Daughter</option>
                 <option value="spouse">Spouse</option>
-                <option value="sibling">Brother / Sister</option>
-                <option value="relative">Relative / Guardian</option>
+                <option value="brother">Brother</option>
+                <option value="sister">Sister</option>
+                <option value="parent">Parent</option>
+                <option value="relative">Other Relative / Guardian</option>
                 <option value="self">Self (Patient)</option>
               </select>
             </div>

@@ -1,5 +1,5 @@
 /**
- * Reserved system subdomains that are not agency tenants.
+ * Reserved system subdomains and path segments that are not agency tenants.
  */
 export const RESERVED_SUBDOMAINS = new Set([
   'www',
@@ -16,6 +16,85 @@ export const RESERVED_SUBDOMAINS = new Set([
 ]);
 
 /**
+ * Extracts the tenant slug or subdomain from the current URL path or hostname.
+ * Supports path-based routing (/t/:tenantSlug) and subdomain routing (subdomain.domain.com).
+ *
+ * Path-based examples:
+ * - "/t/carekerala" => "carekerala"
+ * - "/t/carekerala/dashboard" => "carekerala"
+ *
+ * Subdomain examples:
+ * - "carekerala.caregiverplatform.com" => "carekerala"
+ * - "carekerala.localhost:4200" => "carekerala"
+ */
+export function getTenantSlug(
+  host?: string | null,
+  pathname?: string | null
+): string | null {
+  // 1. Check path-based routing (/t/:tenantSlug/...)
+  const currentPath =
+    pathname ||
+    (typeof window !== 'undefined' ? window.location.pathname : '');
+
+  if (currentPath) {
+    const match = currentPath.match(/^\/t\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      const slug = match[1].toLowerCase().trim();
+      if (isValidSubdomain(slug)) {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('tenant_slug', slug);
+          } catch {
+            // Ignore localStorage errors
+          }
+        }
+        return slug;
+      }
+    }
+  }
+
+  // 2. Check hostname subdomain routing (for future or local custom domain)
+  const sub = getSubdomain(host);
+  if (sub) {
+    return sub;
+  }
+
+  // 3. Fallback to localStorage if in browser
+  if (typeof window !== 'undefined') {
+    const stored =
+      localStorage.getItem('tenant_slug') ||
+      localStorage.getItem('tenant_subdomain');
+    if (stored && isValidSubdomain(stored)) {
+      return stored.toLowerCase().trim();
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Generates an agency-scoped URL path based on current routing mode.
+ * In path-based mode (/t/:tenantSlug), prefixes path with /t/:slug.
+ * When a custom domain with subdomains is active, returns unchanged path.
+ */
+export function tenantPath(path: string, explicitSlug?: string): string {
+  const slug = explicitSlug || getTenantSlug();
+  if (!slug) return path;
+
+  // Don't modify external URLs or api routes
+  if (path.startsWith('http') || path.startsWith('/api/')) return path;
+
+  // If already prefixed with /t/slug, return as is
+  if (path.startsWith(`/t/${slug}`)) return path;
+
+  // If path is '/', return `/t/${slug}`
+  if (path === '/' || path === '') return `/t/${slug}`;
+
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `/t/${slug}${cleanPath}`;
+}
+
+/**
  * Extracts the tenant subdomain from a hostname (works in both browser and server environments).
  *
  * Examples:
@@ -26,6 +105,14 @@ export const RESERVED_SUBDOMAINS = new Set([
  * - "www.caregiverplatform.com" => null
  */
 export function getSubdomain(host?: string | null): string | null {
+  // When no host is explicitly passed in browser, check if path-based slug is present
+  if (!host && typeof window !== 'undefined') {
+    const match = window.location.pathname.match(/^\/t\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1] && isValidSubdomain(match[1])) {
+      return match[1].toLowerCase().trim();
+    }
+  }
+
   const hostname =
     host ||
     (typeof window !== 'undefined' ? window.location.host : '') ||
@@ -52,6 +139,15 @@ export function getSubdomain(host?: string | null): string | null {
     clean === 'localhost' ||
     /^(\d{1,3}\.){3}\d{1,3}$/.test(clean) ||
     clean.includes(':')
+  ) {
+    return null;
+  }
+
+  // Cloud hosting domains (free-tier deployments without wildcard subdomains)
+  // e.g. kaaval-web.vercel.app, caregiver-api.onrender.com
+  if (
+    clean.endsWith('.vercel.app') ||
+    clean.endsWith('.onrender.com')
   ) {
     return null;
   }

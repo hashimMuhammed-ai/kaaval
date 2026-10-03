@@ -83,6 +83,13 @@ export class ProvisionTenantDto {
 
   @IsString()
   @IsOptional()
+  @Matches(/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/, {
+    message: 'tenantSlug must be 3-63 characters, lowercase alphanumeric and hyphens, and cannot start or end with a hyphen',
+  })
+  tenantSlug?: string;
+
+  @IsString()
+  @IsOptional()
   phone?: string;
 
   @IsEmail()

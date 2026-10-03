@@ -15,6 +15,7 @@ export interface ResolvedTenantInfo {
   id: string;
   name: string;
   subdomain: string;
+  tenantSlug: string;
   customDomain?: string | null;
   status: TenantStatus;
   phone?: string | null;
@@ -48,24 +49,44 @@ export class TenantResolverService {
       return null;
     }
 
-    // 1. Direct header override (useful for API gateway, reverse proxy, or tests)
-    const headerSubdomain = req.headers?.['x-tenant-subdomain'];
-    if (headerSubdomain && typeof headerSubdomain === 'string') {
-      const cleanSub = headerSubdomain.trim().toLowerCase();
-      if (SubdomainExtractor.isValidSubdomain(cleanSub)) {
-        return this.resolveBySubdomain(cleanSub);
+    // 1. Path-based tenant resolution (e.g., /t/:tenantSlug or /api/t/:tenantSlug)
+    const rawPath = req.originalUrl || req.url || req.path || '';
+    const pathMatch = typeof rawPath === 'string' ? rawPath.match(/^\/(?:api\/)?t\/([a-zA-Z0-9_-]+)/i) : null;
+    if (pathMatch && pathMatch[1]) {
+      const slug = pathMatch[1].trim().toLowerCase();
+      if (SubdomainExtractor.isValidSubdomain(slug)) {
+        const tenant = await this.resolveBySlug(slug);
+        if (tenant) {
+          return tenant;
+        }
       }
     }
 
-    // 2. Query parameter fallback (e.g., ?subdomain=carekerala)
-    if (req.query?.subdomain && typeof req.query.subdomain === 'string') {
-      const cleanSub = req.query.subdomain.trim().toLowerCase();
-      if (SubdomainExtractor.isValidSubdomain(cleanSub)) {
-        return this.resolveBySubdomain(cleanSub);
+    // 2. Direct header override (x-tenant-slug or x-tenant-subdomain)
+    const headerSlug = req.headers?.['x-tenant-slug'] || req.headers?.['x-tenant-subdomain'];
+    if (headerSlug && typeof headerSlug === 'string') {
+      const cleanSlug = headerSlug.trim().toLowerCase();
+      if (SubdomainExtractor.isValidSubdomain(cleanSlug)) {
+        const tenant = await this.resolveBySlug(cleanSlug);
+        if (tenant) {
+          return tenant;
+        }
       }
     }
 
-    // 3. Extract hostname from x-forwarded-host or host header
+    // 3. Query parameter fallback (tenantSlug, tenant_slug, or subdomain)
+    const querySlug = req.query?.tenantSlug || req.query?.tenant_slug || req.query?.subdomain;
+    if (querySlug && typeof querySlug === 'string') {
+      const cleanSlug = querySlug.trim().toLowerCase();
+      if (SubdomainExtractor.isValidSubdomain(cleanSlug)) {
+        const tenant = await this.resolveBySlug(cleanSlug);
+        if (tenant) {
+          return tenant;
+        }
+      }
+    }
+
+    // 4. Extract hostname from x-forwarded-host or host header (subdomain-based resolution)
     const rawHost =
       (req.headers?.['x-forwarded-host'] as string) ||
       (req.headers?.['host'] as string) ||
@@ -80,7 +101,7 @@ export class TenantResolverService {
       process.env.APP_DOMAIN ||
       'caregiverplatform.com';
 
-    // 4. Try extracting subdomain
+    // 5. Try extracting subdomain from hostname
     const extractedSubdomain = SubdomainExtractor.extract(rawHost, appDomain);
     if (extractedSubdomain) {
       const tenant = await this.resolveBySubdomain(extractedSubdomain);
@@ -89,13 +110,45 @@ export class TenantResolverService {
       }
     }
 
-    // 5. Try resolving as custom domain (e.g., "carekerala-homecare.com")
+    // 6. Try resolving as custom domain (e.g., "carekerala-homecare.com")
     let cleanedHost = rawHost.trim().toLowerCase();
     if (cleanedHost.includes(':')) {
       cleanedHost = cleanedHost.split(':')[0];
     }
 
     return this.resolveByCustomDomain(cleanedHost);
+  }
+
+  /**
+   * Resolves a tenant by its unique URL slug (path-based routing /t/:tenantSlug).
+   * Checks both tenant_slug and subdomain columns for maximum compatibility.
+   */
+  async resolveBySlug(slug: string): Promise<Tenant | null> {
+    if (!slug) {
+      return null;
+    }
+
+    const normalized = slug.trim().toLowerCase();
+    const cacheKey = `slug:${normalized}`;
+
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.tenant;
+    }
+
+    const tenant = await this.tenantRepository
+      .createQueryBuilder('tenant')
+      .where('LOWER(tenant.tenant_slug) = :slug OR LOWER(tenant.subdomain) = :slug', {
+        slug: normalized,
+      })
+      .getOne();
+
+    this.cache.set(cacheKey, {
+      tenant: tenant || null,
+      expiresAt: Date.now() + this.CACHE_TTL_MS,
+    });
+
+    return tenant || null;
   }
 
   /**
@@ -191,6 +244,7 @@ export class TenantResolverService {
       id: tenant.id,
       name: tenant.name,
       subdomain: tenant.subdomain,
+      tenantSlug: tenant.tenantSlug || tenant.subdomain,
       customDomain: tenant.customDomain,
       status: tenant.status,
       phone: tenant.phone,

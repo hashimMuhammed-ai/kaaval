@@ -11,6 +11,10 @@ import {
   DEFAULT_ANALYTICS_CACHE_TTL,
   ANALYTICS_CACHE_PREFIX,
 } from '../constants/analytics.constants';
+import {
+  RedisConnectionHelper,
+  RedisQuotaErrorThrottler,
+} from '../../common/utils/redis-connection.helper';
 
 @Injectable()
 export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
@@ -42,6 +46,7 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    const redisUrl = this.configService.get<string>('REDIS_URL');
     const host = this.configService.get<string>('REDIS_HOST', 'localhost');
     const port = parseInt(
       this.configService.get<string>('REDIS_PORT', '6379'),
@@ -49,17 +54,45 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
     );
     const password =
       this.configService.get<string>('REDIS_PASSWORD') || undefined;
+    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
+    const allowRemote =
+      this.configService.get<string>('ALLOW_REMOTE_REDIS_IN_DEV') === 'true';
+
+    // Guard: Prevent non-production environments from silently connecting to remote Upstash Redis
+    if (
+      RedisConnectionHelper.isRemoteBlockedInDev(
+        redisUrl || host,
+        nodeEnv,
+        allowRemote
+      )
+    ) {
+      this.isRedisReady = false;
+      const sanitized = RedisConnectionHelper.sanitizeRedisUrl(
+        redisUrl || `${host}:${port}`
+      );
+      this.logger.warn(
+        `[RedisGuard] Blocked remote Redis connection in ${nodeEnv} (${sanitized}). Caching safely disabled; serving directly from PostgreSQL.`
+      );
+      return;
+    }
 
     try {
-      this.client = new Redis({
-        host,
-        port,
-        password,
-        lazyConnect: true,
-        enableOfflineQueue: false,
-        maxRetriesPerRequest: 1,
-        retryStrategy: () => null, // Do not infinite loop reconnect in local dev/tests without Redis
-      });
+      this.client = redisUrl
+        ? new Redis(redisUrl, {
+            lazyConnect: true,
+            enableOfflineQueue: false,
+            maxRetriesPerRequest: 1,
+            retryStrategy: () => null,
+          })
+        : new Redis({
+            host,
+            port,
+            password,
+            lazyConnect: true,
+            enableOfflineQueue: false,
+            maxRetriesPerRequest: 1,
+            retryStrategy: () => null, // Do not infinite loop reconnect in local dev/tests without Redis
+          });
 
       this.client.on('connect', () => {
         this.isRedisReady = true;
@@ -68,18 +101,31 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
 
       this.client.on('error', (err) => {
         this.isRedisReady = false;
-        this.logger.warn(`Redis cache unavailable (${err.message}). Bypassing cache to query DB.`);
+        RedisQuotaErrorThrottler.logThrottled(
+          this.logger,
+          'AnalyticsCacheService Client',
+          err,
+          'warn'
+        );
       });
 
       await this.client.connect().catch((err) => {
         this.isRedisReady = false;
-        this.logger.warn(
-          `Initial Redis cache connection failed (${err.message}). Application will serve analytics directly from PostgreSQL materialized views.`
+        RedisQuotaErrorThrottler.logThrottled(
+          this.logger,
+          'AnalyticsCacheService Connect',
+          err,
+          'warn'
         );
       });
     } catch (err: any) {
       this.isRedisReady = false;
-      this.logger.warn(`Failed to initialize Redis client: ${err.message}`);
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        'AnalyticsCacheService Init',
+        err,
+        'warn'
+      );
     }
   }
 
@@ -129,7 +175,12 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
       }
       return JSON.parse(data) as T;
     } catch (err: any) {
-      this.logger.warn(`Error reading from Redis cache (key=${key}): ${err.message}`);
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        `Redis Cache GET ${key}`,
+        err,
+        'warn'
+      );
       return null;
     }
   }
@@ -148,7 +199,12 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
       const serialized = JSON.stringify(value);
       await this.client.set(key, serialized, 'EX', ttl);
     } catch (err: any) {
-      this.logger.warn(`Error writing to Redis cache (key=${key}): ${err.message}`);
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        `Redis Cache SET ${key}`,
+        err,
+        'warn'
+      );
     }
   }
 
@@ -163,7 +219,12 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.client.del(key);
     } catch (err: any) {
-      this.logger.warn(`Error deleting key from Redis cache (key=${key}): ${err.message}`);
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        `Redis Cache DEL ${key}`,
+        err,
+        'warn'
+      );
     }
   }
 
@@ -183,7 +244,12 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
         this.logger.log(`Invalidated ${keys.length} cached analytics keys for tenant: ${tenantId}`);
       }
     } catch (err: any) {
-      this.logger.warn(`Error invalidating tenant cache (tenantId=${tenantId}): ${err.message}`);
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        `Redis Cache InvalidateTenant ${tenantId}`,
+        err,
+        'warn'
+      );
     }
   }
 
@@ -204,7 +270,12 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
         this.logger.log(`Invalidated ${keys.length} cached analytics keys across all tenants.`);
       }
     } catch (err: any) {
-      this.logger.warn(`Error invalidating all analytics cache: ${err.message}`);
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        'Redis Cache InvalidateAll',
+        err,
+        'warn'
+      );
     }
   }
 }

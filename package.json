@@ -9,9 +9,12 @@
     "build": "nx run-many -t build",
     "build:api": "nx build api",
     "build:web": "nx build web",
+    "start": "node dist/apps/api/main.js",
+    "start:prod": "node dist/apps/api/main.js",
     "test": "nx run-many -t test",
-    "db:migrate": "ts-node apps/api/src/database/run-migrations.ts",
-    "db:seed": "ts-node apps/api/src/database/seed.ts"
+    "db:migrate": "ts-node -r dotenv/config -P apps/api/tsconfig.app.json apps/api/src/database/run-migrations.ts",
+    "db:seed": "ts-node -r dotenv/config -P apps/api/tsconfig.app.json apps/api/src/database/seed.ts",
+    "migration:run": "npm run db:migrate"
   },
   "private": true,
   "devDependencies": {

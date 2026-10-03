@@ -5,38 +5,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '../../../../utils/api';
 
-const KERALA_DISTRICTS = [
-  { name: 'Alappuzha', lat: 9.4981, lng: 76.3388 },
-  { name: 'Ernakulam', lat: 9.9816, lng: 76.2999 },
-  { name: 'Idukki', lat: 9.8514, lng: 76.9698 },
-  { name: 'Kannur', lat: 11.8745, lng: 75.3704 },
-  { name: 'Kasaragod', lat: 12.5102, lng: 74.9852 },
-  { name: 'Kollam', lat: 8.8932, lng: 76.6141 },
-  { name: 'Kottayam', lat: 9.5916, lng: 76.5222 },
-  { name: 'Kozhikode', lat: 11.2588, lng: 75.7804 },
-  { name: 'Malappuram', lat: 11.0510, lng: 76.0711 },
-  { name: 'Palakkad', lat: 10.7867, lng: 76.6548 },
-  { name: 'Pathanamthitta', lat: 9.2648, lng: 76.7870 },
-  { name: 'Thiruvananthapuram', lat: 8.5241, lng: 76.9366 },
-  { name: 'Thrissur', lat: 10.5276, lng: 76.2144 },
-  { name: 'Wayanad', lat: 11.6854, lng: 76.1320 },
-];
-
-const AVAILABLE_SKILLS = [
-  'Elderly Care',
-  'Bedridden Care',
-  'Post-Operative Care',
-  "Dementia / Alzheimer's",
-  'Palliative Care',
-  'Tracheostomy Care',
-  'Tube Feeding',
-  'Physiotherapy Support',
-  'Medication Management',
-  'Vital Signs Monitoring',
-  'Infant Care',
-];
-
-const AVAILABLE_LANGUAGES = ['Malayalam', 'English', 'Tamil', 'Hindi', 'Kannada'];
+import {
+  KERALA_DISTRICT_COORDINATES,
+  getDistrictCoordinates,
+} from '../../../../constants/kerala';
+import {
+  AVAILABLE_SKILLS,
+  AVAILABLE_LANGUAGES,
+} from '../../../../constants/skills';
+import { CaregiverStatusType } from '../../../../constants/caregiver-status';
+import {
+  DOCUMENT_TYPE_OPTIONS,
+  DEFAULT_DOC_TITLES,
+} from '../../../../constants/documents';
 
 export default function NewCaregiverPage() {
   const router = useRouter();
@@ -58,7 +39,7 @@ export default function NewCaregiverPage() {
   const [skills, setSkills] = useState<string[]>(['Elderly Care', 'Bedridden Care']);
   const [experienceYears, setExperienceYears] = useState<number | ''>(3);
   const [dailyRate, setDailyRate] = useState<number | ''>(1200);
-  const [status, setStatus] = useState<'available' | 'assigned' | 'on_leave' | 'inactive'>('available');
+  const [status, setStatus] = useState<CaregiverStatusType>('available');
   const [languages, setLanguages] = useState<string[]>(['Malayalam', 'English']);
 
   const [emergencyContactName, setEmergencyContactName] = useState('');
@@ -122,7 +103,7 @@ export default function NewCaregiverPage() {
 
   const handleDistrictChange = (dName: string) => {
     setDistrict(dName);
-    const found = KERALA_DISTRICTS.find((d) => d.name === dName);
+    const found = getDistrictCoordinates(dName);
     if (found) {
       setLatitude(found.lat);
       setLongitude(found.lng);
@@ -273,10 +254,10 @@ export default function NewCaregiverPage() {
           className="glass-panel animate-fade-in"
           style={{
             padding: '2rem',
-            border: '2px solid var(--primary-500)',
-            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+            border: '2px solid #0d9488',
+            backgroundColor: '#ffffff',
             marginBottom: '2.5rem',
-            boxShadow: 'var(--shadow-glow)',
+            boxShadow: '0 4px 20px rgba(13, 148, 136, 0.15)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
@@ -285,12 +266,12 @@ export default function NewCaregiverPage() {
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                border: '1px solid var(--status-success)',
+                backgroundColor: '#ccfbf1',
+                border: '1px solid #0d9488',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#34d399',
+                color: '#0f766e',
               }}
             >
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -299,7 +280,7 @@ export default function NewCaregiverPage() {
             </div>
             <div>
               <span className="badge badge-teal" style={{ marginBottom: '0.25rem' }}>Single Action Complete</span>
-              <h2 style={{ fontSize: '1.35rem', color: '#ffffff' }}>
+              <h2 style={{ fontSize: '1.35rem', color: 'var(--text-main)' }}>
                 {createdResult.fullName} Registered Successfully
               </h2>
             </div>
@@ -313,8 +294,8 @@ export default function NewCaregiverPage() {
           {createdResult.temporaryCredentials && (
             <div
               style={{
-                backgroundColor: 'rgba(7, 11, 20, 0.85)',
-                border: '1px solid var(--border-card)',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
                 borderRadius: 'var(--radius-lg)',
                 padding: '1.5rem',
                 marginBottom: '1.75rem',
@@ -322,37 +303,37 @@ export default function NewCaregiverPage() {
             >
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
                     Login Portal URL
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--primary-400)', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '0.9rem', color: '#0d9488', wordBreak: 'break-all', fontFamily: 'monospace', fontWeight: 600 }}>
                     {createdResult.temporaryCredentials.portalUrl}
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
                     Username / Login Identifier
                   </div>
-                  <div style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 600, fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '0.95rem', color: '#0f172a', fontWeight: 700, fontFamily: 'monospace' }}>
                     {createdResult.temporaryCredentials.username}
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
                     Temporary Password
                   </div>
-                  <div style={{ fontSize: '1.05rem', color: '#fbbf24', fontWeight: 700, fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '1.05rem', color: '#b45309', fontWeight: 700, fontFamily: 'monospace' }}>
                     {createdResult.temporaryCredentials.temporaryPassword}
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
                     Access Code
                   </div>
-                  <div style={{ fontSize: '0.95rem', color: 'var(--accent-blue)', fontWeight: 600, fontFamily: 'monospace' }}>
+                  <div style={{ fontSize: '0.95rem', color: '#0284c7', fontWeight: 700, fontFamily: 'monospace' }}>
                     {createdResult.temporaryCredentials.accessCode}
                   </div>
                 </div>
@@ -363,15 +344,15 @@ export default function NewCaregiverPage() {
           {/* Quick Document Attachment (Object Storage) */}
           <div
             style={{
-              backgroundColor: 'rgba(11, 17, 32, 0.75)',
+              backgroundColor: '#f8fafc',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-card)',
+              border: '1px solid #e2e8f0',
               padding: '1.25rem',
               marginBottom: '1.5rem',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <div style={{ fontWeight: 600, color: '#ffffff', fontSize: '0.925rem' }}>
+              <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.925rem' }}>
                 Attach Documents / Certifications (Object Storage)
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -410,30 +391,32 @@ export default function NewCaregiverPage() {
               </div>
             )}
 
-            <form onSubmit={handleUploadForNewCaregiver} style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem' }}>
+            <form onSubmit={handleUploadForNewCaregiver} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.65rem' }}>
                 <div>
-                  <label style={{ fontSize: '0.725rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.2rem' }}>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
                     Document Type
                   </label>
                   <select
                     value={docType}
-                    onChange={(e) => setDocType(e.target.value)}
+                    onChange={(e) => {
+                      const newType = e.target.value;
+                      setDocType(newType);
+                      setDocTitle(DEFAULT_DOC_TITLES[newType] || 'Document');
+                    }}
                     className="form-input"
-                    style={{ fontSize: '0.775rem', padding: '0.4rem' }}
+                    style={{ fontSize: '0.825rem', padding: '0.5rem', minHeight: '42px' }}
                   >
-                    <option value="nursing_certificate">Nursing Council Certificate</option>
-                    <option value="aadhaar">Aadhaar / Photo ID</option>
-                    <option value="police_clearance">Police Clearance Certificate</option>
-                    <option value="experience_certificate">Experience Certificate</option>
-                    <option value="cpr_first_aid">CPR & First Aid</option>
-                    <option value="medical_fitness">Medical Fitness</option>
-                    <option value="other">Other Document</option>
+                    {DOCUMENT_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '0.725rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.2rem' }}>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
                     Title
                   </label>
                   <input
@@ -441,14 +424,14 @@ export default function NewCaregiverPage() {
                     value={docTitle}
                     onChange={(e) => setDocTitle(e.target.value)}
                     className="form-input"
-                    style={{ fontSize: '0.775rem', padding: '0.4rem' }}
+                    style={{ fontSize: '0.825rem', padding: '0.5rem', minHeight: '42px' }}
                     placeholder="Document Label"
                     required
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '0.725rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.2rem' }}>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
                     Expiry Date (Optional)
                   </label>
                   <input
@@ -456,12 +439,13 @@ export default function NewCaregiverPage() {
                     value={docExpiry}
                     onChange={(e) => setDocExpiry(e.target.value)}
                     className="form-input"
-                    style={{ fontSize: '0.775rem', padding: '0.4rem' }}
+                    style={{ fontSize: '0.825rem', padding: '0.5rem', minHeight: '42px' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              {/* File / Camera Picker Triggers */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <input
                   id="new-caregiver-file"
                   type="file"
@@ -471,15 +455,91 @@ export default function NewCaregiverPage() {
                       setDocFile(e.target.files[0]);
                     }
                   }}
-                  style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', flex: 1 }}
+                  style={{ display: 'none' }}
                 />
+                <input
+                  id="new-caregiver-camera-file"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setDocFile(e.target.files[0]);
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                />
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    id="btn-upload-camera"
+                    onClick={() => document.getElementById('new-caregiver-camera-file')?.click()}
+                    className="btn-secondary"
+                    style={{
+                      minHeight: '44px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
+                      fontSize: '0.825rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <span>📸</span> Snap with Camera
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-upload-file"
+                    onClick={() => document.getElementById('new-caregiver-file')?.click()}
+                    className="btn-secondary"
+                    style={{
+                      minHeight: '44px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
+                      fontSize: '0.825rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <span>📁</span> Browse Document / PDF
+                  </button>
+                </div>
+
+                {docFile && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                      border: '1px solid rgba(20, 184, 166, 0.3)',
+                      fontSize: '0.8rem',
+                      color: '#2dd4bf',
+                    }}
+                  >
+                    <span>📄 Selected: <strong>{docFile.name}</strong> ({(docFile.size / 1024).toFixed(0)} KB)</span>
+                    <button
+                      type="button"
+                      onClick={() => setDocFile(null)}
+                      style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '0.8rem' }}
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  disabled={uploadingDoc}
+                  disabled={uploadingDoc || !docFile}
                   className="btn-primary"
-                  style={{ padding: '0.4rem 0.85rem', fontSize: '0.775rem' }}
+                  id="btn-submit-doc-upload"
+                  style={{ minHeight: '44px', fontSize: '0.85rem', fontWeight: 700, justifyContent: 'center' }}
                 >
-                  {uploadingDoc ? 'Uploading...' : 'Attach Document'}
+                  {uploadingDoc ? 'Uploading to Object Storage...' : 'Attach & Store Document'}
                 </button>
               </div>
             </form>
@@ -536,7 +596,7 @@ export default function NewCaregiverPage() {
       )}
 
       {/* Main Creation Form */}
-      <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '2.5rem' }}>
+      <form onSubmit={handleSubmit} className="glass-panel responsive-form-container">
         {error && (
           <div
             style={{
@@ -677,7 +737,7 @@ export default function NewCaregiverPage() {
                 value={district}
                 onChange={(e) => handleDistrictChange(e.target.value)}
               >
-                {KERALA_DISTRICTS.map((d) => (
+                {KERALA_DISTRICT_COORDINATES.map((d) => (
                   <option key={d.name} value={d.name}>
                     {d.name}
                   </option>
@@ -707,7 +767,7 @@ export default function NewCaregiverPage() {
               />
             </div>
 
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <div className="form-group form-grid-span-2">
               <label className="form-label">Street Address</label>
               <input
                 type="text"
@@ -967,7 +1027,7 @@ export default function NewCaregiverPage() {
               5
             </span>
             <div>
-              <h2 style={{ fontSize: '1.2rem', color: '#ffffff' }}>Self-Service Portal Login Credentials</h2>
+              <h2 style={{ fontSize: '1.2rem', color: 'var(--text-main)' }}>Self-Service Portal Login Credentials</h2>
               <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>
                 Configures the caregiver's first-time login credential generated upon creation.
               </span>
@@ -976,8 +1036,8 @@ export default function NewCaregiverPage() {
 
           <div
             style={{
-              backgroundColor: 'rgba(11, 17, 32, 0.65)',
-              border: '1px solid var(--border-card)',
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: 'var(--radius-md)',
               padding: '1.25rem',
               display: 'flex',
@@ -993,7 +1053,7 @@ export default function NewCaregiverPage() {
                 onChange={(e) => setAutoGenPassword(e.target.checked)}
                 style={{ width: '18px', height: '18px', accentColor: 'var(--primary-500)', cursor: 'pointer' }}
               />
-              <label htmlFor="auto-gen-password-checkbox" style={{ fontSize: '0.9rem', color: '#ffffff', cursor: 'pointer' }}>
+              <label htmlFor="auto-gen-password-checkbox" style={{ fontSize: '0.9rem', color: 'var(--text-main)', cursor: 'pointer' }}>
                 Auto-generate secure temporary password (e.g. Care@KRL7!)
               </label>
             </div>

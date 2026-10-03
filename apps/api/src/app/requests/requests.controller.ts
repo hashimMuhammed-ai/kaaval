@@ -9,6 +9,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateCaregiverRequestDto } from './dto/create-request.dto';
@@ -32,8 +33,14 @@ export class RequestsController {
    */
   @Post('public')
   @HttpCode(HttpStatus.CREATED)
-  async createPublicRequest(@Body() dto: CreateCaregiverRequestDto) {
-    const result = await this.requestsService.createRequest(dto);
+  async createPublicRequest(
+    @Body() dto: CreateCaregiverRequestDto,
+    @Req() req?: any
+  ) {
+    const authTenantId = req?.tenantId || req?.tenant?.id;
+    const result = authTenantId
+      ? await this.requestsService.createRequest(dto, authTenantId)
+      : await this.requestsService.createRequest(dto);
     return {
       success: true,
       message: 'Caregiver request recorded and instant notifications dispatched.',
@@ -111,6 +118,25 @@ export class RequestsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.OFFICE_STAFF)
   async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateRequestStatusDto,
+    @CurrentUser() user: JwtPayload
+  ) {
+    const updated = await this.requestsService.updateStatus(id, user.tenantId!, dto);
+    return {
+      success: true,
+      message: `Request status updated to ${dto.status}.`,
+      data: updated,
+    };
+  }
+
+  /**
+   * Admin dashboard: Update request by ID (alias for status & caregiver assignment updates).
+   */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.OFFICE_STAFF)
+  async update(
     @Param('id') id: string,
     @Body() dto: UpdateRequestStatusDto,
     @CurrentUser() user: JwtPayload

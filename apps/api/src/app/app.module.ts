@@ -25,22 +25,19 @@ import { TenantSessionInterceptor } from './common/interceptors/tenant-session.i
 import { TenantSessionGuard } from './common/guards/tenant-session.guard';
 import { TenantResolutionMiddleware } from './common/middleware/tenant-resolution.middleware';
 
+import { RedisConnectionHelper } from './common/utils/redis-connection.helper';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '.env.example'],
+      envFilePath: ['.env', 'apps/api/.env'],
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('REDIS_HOST', 'localhost'),
-          port: parseInt(configService.get<string>('REDIS_PORT', '6379'), 10),
-          password: configService.get<string>('REDIS_PASSWORD') || undefined,
-          maxRetriesPerRequest: null,
-        },
+        connection: RedisConnectionHelper.resolveBullConfig(configService),
       }),
     }),
     DatabaseModule,

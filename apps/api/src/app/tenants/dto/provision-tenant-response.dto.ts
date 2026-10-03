@@ -2,6 +2,7 @@ export interface ProvisionedTenantInfo {
   id: string;
   name: string;
   subdomain: string;
+  tenantSlug: string;
   customDomain?: string | null;
   status: string;
   phone?: string | null;

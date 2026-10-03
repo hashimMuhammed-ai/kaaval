@@ -55,13 +55,30 @@ describe('DashboardRequestsPage (Admin Requests Inbox)', () => {
     render(<DashboardRequestsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('REQ-2026-894102')).toBeTruthy();
-      expect(screen.getByText(/Mary Varghese/i)).toBeTruthy();
-      expect(screen.getByText(/Bedridden & Palliative Care/i)).toBeTruthy();
+      expect(screen.getAllByText(/REQ-2026-894102/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Mary Varghese/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Bedridden & Palliative Care/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/Ernakulam \(Kochi\)/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/Dr\. Thomas Varghese/i)).toBeTruthy();
-      expect(screen.getByText('WhatsApp')).toBeTruthy();
+      expect(screen.getAllByText(/Dr\. Thomas Varghese/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/WhatsApp/i).length).toBeGreaterThan(0);
       expect(screen.getByRole('button', { name: /Details & Notes/i })).toBeTruthy();
+    });
+  });
+
+  it('should render mobile touch cards feed with 1-tap call and WhatsApp actions', async () => {
+    render(<DashboardRequestsPage />);
+
+    await waitFor(() => {
+      const mobileFeed = document.getElementById('mobile-requests-feed');
+      expect(mobileFeed).toBeTruthy();
+
+      const callLink = document.getElementById('mobile-call-REQ-2026-894102');
+      expect(callLink).toBeTruthy();
+      expect(callLink?.getAttribute('href')).toContain('tel:');
+
+      const waLink = document.getElementById('mobile-wa-REQ-2026-894102');
+      expect(waLink).toBeTruthy();
+      expect(waLink?.getAttribute('href')).toContain('wa.me');
     });
   });
 

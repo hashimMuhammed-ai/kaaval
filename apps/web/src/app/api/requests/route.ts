@@ -38,10 +38,14 @@ export async function POST(request: Request) {
       body.referenceId ||
       `REQ-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    // 1. Dispatch to NestJS Backend (/requests/public) to persist in database & trigger WhatsApp
-    let createdRequestData: any = null;
-    let whatsappNotification: any = null;
+    const tenantSlug =
+      request.headers.get('x-tenant-slug') ||
+      request.headers.get('x-tenant-subdomain') ||
+      body.tenantSlug ||
+      body.subdomain ||
+      '';
 
+    // 1. Dispatch to NestJS Backend (/requests/public) to persist in database & trigger WhatsApp
     let apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
     if (!apiBase.endsWith('/api') && !apiBase.includes('/api/')) {
       apiBase = `${apiBase.replace(/\/$/, '')}/api`;
@@ -50,71 +54,45 @@ export async function POST(request: Request) {
     try {
       const backendRes = await fetch(`${apiBase}/requests/public`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(tenantSlug ? { 'x-tenant-slug': tenantSlug, 'x-tenant-subdomain': tenantSlug } : {}),
+        },
         body: JSON.stringify({
           ...body,
           referenceId,
-          source: 'public_form',
+          tenantSlug: tenantSlug || undefined,
+          subdomain: tenantSlug || body.subdomain || undefined,
+          source: body.source || 'public_form',
         }),
       });
 
-      if (backendRes.ok) {
-        const json = await backendRes.json();
-        createdRequestData = json.data;
-        whatsappNotification = json.whatsappNotification;
+      const data = await backendRes.json().catch(() => null);
+
+      if (backendRes.ok && data) {
+        return NextResponse.json(data, { status: 201 });
       }
-    } catch {
-      // In offline / standalone development mode, log and fall back gracefully
-    }
 
-    if (!whatsappNotification) {
-      whatsappNotification = {
-        success: true,
-        message: 'WhatsApp alert queued (offline fallback mode)',
-        data: {
-          referenceId,
-          agencyName: body.agencyName || 'CareKerala',
-          ownerAlert: { sent: true, mode: 'mock' },
+      const errorMsg =
+        data?.message ||
+        (Array.isArray(data?.message) ? data.message.join(', ') : null) ||
+        `Backend failed with status ${backendRes.status}`;
+
+      return NextResponse.json(
+        { success: false, message: errorMsg },
+        { status: backendRes.status || 500 }
+      );
+    } catch (fetchErr: any) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            fetchErr?.message ||
+            'Unable to connect to backend server. Please check your network or try again later.',
         },
-      };
+        { status: 502 }
+      );
     }
-
-    const fallbackRequestData = {
-      id: createdRequestData?.id || `req-${Date.now()}`,
-      referenceId,
-      serviceType: body.serviceType,
-      district: body.district,
-      locality: body.locality || '',
-      address: body.address || '',
-      duration: body.duration,
-      engagementPeriod: body.engagementPeriod || 'ongoing',
-      genderPreference: body.genderPreference,
-      startDate: body.startDate,
-      phone: body.phone,
-      patientName: body.patientName,
-      patientAge: body.patientAge || '',
-      patientGender: body.patientGender || 'unspecified',
-      patientCondition: body.patientCondition || '',
-      mobilityStatus: body.mobilityStatus || 'assisted',
-      medicalEquipment: body.medicalEquipment || 'none',
-      contactName: body.contactName,
-      relationship: body.relationship || 'son_daughter',
-      notes: body.notes || '',
-      status: createdRequestData?.status || 'pending',
-      tenantId: body.tenantId || null,
-      agencyName: body.agencyName || 'CareKerala',
-      createdAt: createdRequestData?.createdAt || new Date().toISOString(),
-    };
-
-    const responsePayload = {
-      success: true,
-      referenceId,
-      message: 'Caregiver request recorded in dashboard and instant WhatsApp notification dispatched.',
-      whatsappNotification: whatsappNotification?.data || whatsappNotification,
-      data: createdRequestData || fallbackRequestData,
-    };
-
-    return NextResponse.json(responsePayload, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: err?.message || 'Failed to process care request.' },
@@ -131,7 +109,10 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const authHeader = request.headers.get('authorization') || '';
-  const subdomainHeader = request.headers.get('x-tenant-subdomain') || '';
+  const subdomainHeader =
+    request.headers.get('x-tenant-slug') ||
+    request.headers.get('x-tenant-subdomain') ||
+    '';
 
   try {
     const res = await fetch(`${apiBase}/requests?${searchParams.toString()}`, {
@@ -139,7 +120,9 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'application/json',
         ...(authHeader ? { Authorization: authHeader } : {}),
-        ...(subdomainHeader ? { 'x-tenant-subdomain': subdomainHeader } : {}),
+        ...(subdomainHeader
+          ? { 'x-tenant-subdomain': subdomainHeader, 'x-tenant-slug': subdomainHeader }
+          : {}),
       },
     });
 

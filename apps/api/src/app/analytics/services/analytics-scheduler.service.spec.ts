@@ -105,10 +105,22 @@ describe('AnalyticsSchedulerService', () => {
         })
       );
     });
+
+    it('should skip scheduled job registration when ENABLE_ANALYTICS_WORKER=false', async () => {
+      mockConfigService.get = jest.fn().mockImplementation((key: string) => {
+        if (key === 'ENABLE_ANALYTICS_WORKER') return 'false';
+        return DEFAULT_ANALYTICS_REFRESH_CRON;
+      });
+
+      await service.onModuleInit();
+
+      expect(mockQueue.getRepeatableJobs).not.toHaveBeenCalled();
+      expect(mockQueue.add).not.toHaveBeenCalled();
+    });
   });
 
   describe('triggerRefreshNow', () => {
-    it('should enqueue immediate one-off refresh job', async () => {
+    it('should enqueue immediate one-off refresh job when worker is enabled', async () => {
       const result = await service.triggerRefreshNow('manual-admin');
 
       expect(mockQueue.add).toHaveBeenCalledWith(
@@ -117,6 +129,18 @@ describe('AnalyticsSchedulerService', () => {
         expect.objectContaining({ removeOnComplete: true })
       );
       expect(result).toEqual({ jobId: 'job-123', status: 'enqueued' });
+    });
+
+    it('should throw an error when ENABLE_ANALYTICS_WORKER=false', async () => {
+      mockConfigService.get = jest.fn().mockImplementation((key: string) => {
+        if (key === 'ENABLE_ANALYTICS_WORKER') return 'false';
+        return DEFAULT_ANALYTICS_REFRESH_CRON;
+      });
+
+      await expect(service.triggerRefreshNow('manual-admin')).rejects.toThrow(
+        /ENABLE_ANALYTICS_WORKER=false/
+      );
+      expect(mockQueue.add).not.toHaveBeenCalled();
     });
   });
 
@@ -127,8 +151,40 @@ describe('AnalyticsSchedulerService', () => {
       expect(result.queueName).toBe(ANALYTICS_REFRESH_QUEUE);
       expect(result.cronSchedule).toBe(DEFAULT_ANALYTICS_REFRESH_CRON);
       expect(result.isPaused).toBe(false);
+      expect(result.workerEnabled).toBe(true);
       expect(result.counts.completed).toBe(24);
       expect(result.counts.waiting).toBe(1);
+    });
+
+    it('should return safe inactive state with counts: null without querying queue when ENABLE_ANALYTICS_WORKER=false', async () => {
+      mockConfigService.get = jest.fn().mockImplementation((key: string) => {
+        if (key === 'ENABLE_ANALYTICS_WORKER') return 'false';
+        return DEFAULT_ANALYTICS_REFRESH_CRON;
+      });
+
+      const result = await service.getQueueStatus();
+
+      expect(result.isPaused).toBe(true);
+      expect(result.workerEnabled).toBe(false);
+      expect(result.counts).toBeNull();
+      expect(result.message).toContain('ENABLE_ANALYTICS_WORKER=false');
+      expect(mockQueue.getJobCounts).not.toHaveBeenCalled();
+      expect(mockQueue.isPaused).not.toHaveBeenCalled();
+    });
+
+    it('should handle Redis error in getQueueStatus gracefully with counts: null', async () => {
+      mockQueue.getJobCounts = jest
+        .fn()
+        .mockRejectedValue(
+          new Error('ERR max requests limit exceeded. Limit: 500000, Usage: 500004')
+        );
+
+      const result = await service.getQueueStatus();
+
+      expect(result.isPaused).toBe(true);
+      expect(result.counts).toBeNull();
+      expect(result.message).toContain('Queue status unavailable');
+      expect(result.repeatableJobs).toEqual([]);
     });
   });
 });

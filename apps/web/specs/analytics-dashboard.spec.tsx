@@ -123,14 +123,12 @@ describe('OwnerAnalyticsDashboardPage (Phase 11 Point 4)', () => {
     });
   });
 
-  it('should render the dashboard header, title, and Redis cache indicator', async () => {
+  it('should render the dashboard header and title', async () => {
     render(<OwnerAnalyticsDashboardPage />);
 
-    expect(screen.getByText('Phase 11 — Analytics Intelligence')).toBeTruthy();
     expect(
       screen.getByRole('heading', { level: 1, name: /Agency Performance & Owner Analytics/i })
     ).toBeTruthy();
-    expect(screen.getByText(/Redis Cache Active/i)).toBeTruthy();
 
     await waitFor(() => {
       expect(mockApiFetch).toHaveBeenCalledWith('/analytics/overview');
@@ -262,19 +260,7 @@ describe('OwnerAnalyticsDashboardPage (Phase 11 Point 4)', () => {
     });
   });
 
-  it('should handle Clear Cache button trigger and display notice', async () => {
-    const { container } = render(<OwnerAnalyticsDashboardPage />);
 
-    const clearBtn = container.querySelector('#btn-clear-cache');
-    expect(clearBtn).toBeTruthy();
-
-    fireEvent.click(clearBtn!);
-
-    await waitFor(() => {
-      expect(mockApiFetch).toHaveBeenCalledWith('/analytics/cache', { method: 'POST' });
-      expect(screen.getByText(/Redis cache keys invalidated/i)).toBeTruthy();
-    });
-  });
 
   it('should render the Historical Performance Ledger table with formatted columns and values', async () => {
     const { container } = render(<OwnerAnalyticsDashboardPage />);

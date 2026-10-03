@@ -6,6 +6,7 @@ import CaregiverAssignmentPage from '../src/app/portal/assignment/page';
 import CaregiverAttendancePage from '../src/app/portal/attendance/page';
 import CaregiverSalaryPage from '../src/app/portal/salary/page';
 import CaregiverDocumentsPage from '../src/app/portal/documents/page';
+import CaregiverProfilePage from '../src/app/portal/profile/page';
 
 // Mock next/navigation
 const mockPush = jest.fn();
@@ -240,15 +241,12 @@ describe('Caregiver Self-Service Portal (Phase 7 — First Point)', () => {
         </CaregiverPortalLayout>
       );
 
-      // Header title & connectivity
+      // Minimalist native header title, agency name, and Help button
       expect(screen.getByText('Caregiver Portal')).toBeTruthy();
-      expect(screen.getByText(/Online/i)).toBeTruthy();
-
-      // Avatar Initial
-      expect(screen.getByTitle('Deepa Varghese')).toBeTruthy();
-
-      // Exit button
-      expect(screen.getByRole('button', { name: /Sign Out/i })).toBeTruthy();
+      expect(screen.getByText('Kerala Care')).toBeTruthy();
+      expect(screen.getByRole('button', { name: /Caregiver Help/i })).toBeTruthy();
+      expect(screen.queryByText('Staff Portal')).toBeNull();
+      expect(screen.queryByText(/Online/i)).toBeNull();
 
       // 5 Mobile Bottom Navigation Tabs
       expect(screen.getByRole('navigation', { name: /Caregiver Bottom Navigation/i })).toBeTruthy();
@@ -256,11 +254,43 @@ describe('Caregiver Self-Service Portal (Phase 7 — First Point)', () => {
       expect(screen.getByText('Duty')).toBeTruthy();
       expect(screen.getByText('Punch')).toBeTruthy();
       expect(screen.getByText('Salary')).toBeTruthy();
-      expect(screen.getByText('Docs')).toBeTruthy();
+      expect(screen.getByText('Profile')).toBeTruthy();
 
       // Lowest privilege: Caregiver should NEVER see links to /dashboard
       expect(screen.queryByText(/Staff Preview Mode/i)).toBeNull();
       expect(screen.queryByRole('link', { name: /Dashboard/i })).toBeNull();
+    });
+
+    it('should open Help action sheet with Call Office Staff, WhatsApp, and Ambulance when Help button is clicked', async () => {
+      render(
+        <CaregiverPortalLayout>
+          <div>Content</div>
+        </CaregiverPortalLayout>
+      );
+
+      const helpBtn = screen.getByRole('button', { name: /Caregiver Help/i });
+      fireEvent.click(helpBtn);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Emergency & Duty Help/i)).toBeTruthy();
+      });
+
+      const callOfficeBtn = screen.getByLabelText(/Call Office Staff/i);
+      expect(callOfficeBtn.getAttribute('href')).toBe('tel:+919876543210');
+
+      const whatsappBtn = screen.getByLabelText(/WhatsApp Office Support/i);
+      expect(whatsappBtn.getAttribute('href')).toContain('https://wa.me/919876543210');
+
+      const ambulanceBtn = screen.getByLabelText(/Call 108 Ambulance/i);
+      expect(ambulanceBtn.getAttribute('href')).toBe('tel:108');
+
+      // Dismiss help modal
+      const closeBtn = screen.getByRole('button', { name: /Close/i });
+      fireEvent.click(closeBtn);
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Emergency & Duty Help/i)).toBeNull();
+      });
     });
 
     it('should show staff preview banner when viewed by office_staff role', () => {
@@ -277,16 +307,37 @@ describe('Caregiver Self-Service Portal (Phase 7 — First Point)', () => {
       expect(dashboardLink).toBeTruthy();
       expect(dashboardLink.getAttribute('href')).toBe('/dashboard');
     });
+  });
 
-    it('should handle sign out by removing token and redirecting to /login', () => {
-      render(
-        <CaregiverPortalLayout>
-          <div>Content</div>
-        </CaregiverPortalLayout>
-      );
+  describe('Caregiver Profile Page (Mobile Profile, Documents & Sign Out)', () => {
+    it('should render profile details, credentials navigation, and emergency contact', async () => {
+      render(<CaregiverProfilePage />);
 
-      const logoutBtn = screen.getByRole('button', { name: /Sign Out/i });
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Deepa Varghese/i })).toBeTruthy();
+        expect(screen.getByText(/Available for Duty/i)).toBeTruthy();
+        expect(screen.getByText(/Documents & Certifications/i)).toBeTruthy();
+      });
+
+      const docsLink = screen.getByRole('link', { name: /Documents & Certifications/i });
+      expect(docsLink.getAttribute('href')).toBe('/portal/documents');
+    });
+
+    it('should open sign out confirmation modal and sign out when confirmed', async () => {
+      render(<CaregiverProfilePage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Deepa Varghese/i })).toBeTruthy();
+      });
+
+      const logoutBtn = screen.getByRole('button', { name: /Sign Out of Portal/i });
       fireEvent.click(logoutBtn);
+      await waitFor(() => {
+        expect(screen.getByText(/Sign Out of Portal\?/i)).toBeTruthy();
+      });
+
+      const confirmBtn = screen.getByRole('button', { name: /Yes, Sign Out/i });
+      fireEvent.click(confirmBtn);
 
       expect(localStorage.getItem('auth_token')).toBeNull();
       expect(mockPush).toHaveBeenCalledWith('/login');
@@ -294,30 +345,13 @@ describe('Caregiver Self-Service Portal (Phase 7 — First Point)', () => {
   });
 
   describe('Caregiver Portal Home Page (Mobile Dashboard)', () => {
-    it('should render caregiver greeting, operational status badge, and location info', async () => {
+    it('should render caregiver greeting and operational status badge', async () => {
       render(<CaregiverPortalHomePage />);
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: /Deepa Varghese/i })).toBeTruthy();
         expect(screen.getByText('Available')).toBeTruthy();
-        expect(screen.getByText(/Kochi, Ernakulam/i)).toBeTruthy();
       });
-    });
-
-    it('should render emergency coordinator helpline with call and WhatsApp links', async () => {
-      render(<CaregiverPortalHomePage />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Coordinator SOS Support/i)).toBeTruthy();
-      });
-
-      const callBtn = screen.getByLabelText(/Call Agency Coordinator/i);
-      expect(callBtn).toBeTruthy();
-      expect(callBtn.getAttribute('href')).toBe('tel:+919876543210');
-
-      const whatsappBtn = screen.getByLabelText(/WhatsApp Coordinator/i);
-      expect(whatsappBtn).toBeTruthy();
-      expect(whatsappBtn.getAttribute('href')).toContain('https://wa.me/919876543210');
     });
 
     it('should render active assignment overview with patient name and address', async () => {

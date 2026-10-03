@@ -56,9 +56,13 @@ export class RequestsService {
     let resolvedTenantId = authTenantId || dto.tenantId;
     let resolvedAgencyName = dto.agencyName;
 
-    if (!resolvedTenantId && dto.subdomain) {
+    const slugOrSub = (dto.tenantSlug || dto.subdomain)?.trim().toLowerCase();
+    if (!resolvedTenantId && slugOrSub) {
       const tenant = await this.tenantRepository.findOne({
-        where: { subdomain: dto.subdomain.trim().toLowerCase() },
+        where: [
+          { tenantSlug: slugOrSub },
+          { subdomain: slugOrSub },
+        ],
       });
       if (tenant) {
         resolvedTenantId = tenant.id;
@@ -170,7 +174,7 @@ export class RequestsService {
     const skip = (page - 1) * limit;
 
     const qb = this.requestRepository.createQueryBuilder('req')
-      .where('req.tenant_id = :tenantId', { tenantId })
+      .where('req.tenantId = :tenantId', { tenantId })
       .leftJoinAndSelect('req.assignedCaregiver', 'caregiver')
       .leftJoinAndSelect('req.customer', 'customer');
 
@@ -184,12 +188,12 @@ export class RequestsService {
 
     if (query.q) {
       qb.andWhere(
-        '(req.patient_name ILIKE :q OR req.contact_name ILIKE :q OR req.phone ILIKE :q OR req.reference_id ILIKE :q)',
+        '(req.patientName ILIKE :q OR req.contactName ILIKE :q OR req.phone ILIKE :q OR req.referenceId ILIKE :q)',
         { q: `%${query.q.trim()}%` }
       );
     }
 
-    qb.orderBy('req.created_at', 'DESC')
+    qb.orderBy('req.createdAt', 'DESC')
       .skip(skip)
       .take(limit);
 
@@ -200,7 +204,7 @@ export class RequestsService {
       .createQueryBuilder('req')
       .select('req.status', 'status')
       .addSelect('COUNT(*)', 'count')
-      .where('req.tenant_id = :tenantId', { tenantId })
+      .where('req.tenantId = :tenantId', { tenantId })
       .groupBy('req.status')
       .getRawMany();
 

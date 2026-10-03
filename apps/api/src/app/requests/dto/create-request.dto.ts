@@ -105,5 +105,9 @@ export class CreateCaregiverRequestDto {
 
   @IsOptional()
   @IsString()
+  tenantSlug?: string;
+
+  @IsOptional()
+  @IsString()
   source?: string;
 }

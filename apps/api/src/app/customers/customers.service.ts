@@ -239,7 +239,7 @@ export class CustomersService {
 
     const qb = this.customerRepository
       .createQueryBuilder('cust')
-      .where('cust.tenant_id = :tenantId', { tenantId })
+      .where('cust.tenantId = :tenantId', { tenantId })
       .leftJoinAndSelect('cust.request', 'req')
       .leftJoinAndSelect('cust.assignedCaregiver', 'caregiver');
 
@@ -258,7 +258,7 @@ export class CustomersService {
           stats: { total: 0, active: 0, pending: 0, paused: 0, inactive: 0, discharged: 0 },
         };
       }
-      qb.andWhere('cust.assigned_caregiver_id = :cgId', { cgId: caregiver.id });
+      qb.andWhere('cust.assignedCaregiverId = :cgId', { cgId: caregiver.id });
     }
 
     if (query.status) {
@@ -270,17 +270,17 @@ export class CustomersService {
     }
 
     if (query.assignedCaregiverId) {
-      qb.andWhere('cust.assigned_caregiver_id = :cgId', { cgId: query.assignedCaregiverId });
+      qb.andWhere('cust.assignedCaregiverId = :cgId', { cgId: query.assignedCaregiverId });
     }
 
     if (query.q) {
       qb.andWhere(
-        '(cust.patient_name ILIKE :q OR cust.primary_contact_name ILIKE :q OR cust.phone ILIKE :q OR cust.reference_id ILIKE :q)',
+        '(cust.patientName ILIKE :q OR cust.primaryContactName ILIKE :q OR cust.phone ILIKE :q OR cust.referenceId ILIKE :q)',
         { q: `%${query.q.trim()}%` }
       );
     }
 
-    qb.orderBy('cust.created_at', 'DESC')
+    qb.orderBy('cust.createdAt', 'DESC')
       .skip(skip)
       .take(limit);
 
@@ -291,7 +291,7 @@ export class CustomersService {
       .createQueryBuilder('cust')
       .select('cust.status', 'status')
       .addSelect('COUNT(*)', 'count')
-      .where('cust.tenant_id = :tenantId', { tenantId })
+      .where('cust.tenantId = :tenantId', { tenantId })
       .groupBy('cust.status')
       .getRawMany();
 

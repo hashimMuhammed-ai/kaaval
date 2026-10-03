@@ -1,0 +1,45 @@
+# Render Blueprint Specification for Caregiver Agency Platform Backend API
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: caregiver-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build:api && npm run db:migrate
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_DOMAIN
+        value: caregiverplatform.com
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 1d
+      - key: FRONTEND_URL
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_WEBHOOK_VERIFY_TOKEN
+        generateValue: true
+      - key: WHATSAPP_API_VERSION
+        value: v21.0
+      - key: WHATSAPP_DEV_MOCK_MODE
+        value: "false"

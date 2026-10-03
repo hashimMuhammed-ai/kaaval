@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '../../../utils/api';
+import { KERALA_DISTRICTS } from '../../../constants/kerala';
 
 const STATUS_CONFIG: Record<
   string,
@@ -10,58 +11,40 @@ const STATUS_CONFIG: Record<
 > = {
   active: {
     label: 'Active Care',
-    color: '#34d399',
-    bg: 'rgba(16, 185, 129, 0.15)',
-    border: 'rgba(16, 185, 129, 0.35)',
+    color: '#059669',
+    bg: 'rgba(16, 185, 129, 0.12)',
+    border: 'rgba(16, 185, 129, 0.25)',
     dot: '#10b981',
   },
   pending: {
     label: 'Pending Assignment',
-    color: '#fbbf24',
-    bg: 'rgba(245, 158, 11, 0.15)',
-    border: 'rgba(245, 158, 11, 0.35)',
+    color: '#d97706',
+    bg: 'rgba(245, 158, 11, 0.12)',
+    border: 'rgba(245, 158, 11, 0.25)',
     dot: '#f59e0b',
   },
   paused: {
     label: 'Temporarily Paused',
-    color: '#38bdf8',
-    bg: 'rgba(56, 189, 248, 0.15)',
-    border: 'rgba(56, 189, 248, 0.35)',
-    dot: '#38bdf8',
+    color: '#0284c7',
+    bg: 'rgba(56, 189, 248, 0.12)',
+    border: 'rgba(56, 189, 248, 0.25)',
+    dot: '#0284c7',
   },
   discharged: {
     label: 'Discharged',
-    color: '#a78bfa',
-    bg: 'rgba(167, 139, 250, 0.15)',
-    border: 'rgba(167, 139, 250, 0.35)',
-    dot: '#a78bfa',
+    color: '#7c3aed',
+    bg: 'rgba(167, 139, 250, 0.12)',
+    border: 'rgba(167, 139, 250, 0.25)',
+    dot: '#7c3aed',
   },
   inactive: {
     label: 'Inactive',
-    color: '#94a3b8',
-    bg: 'rgba(148, 163, 184, 0.15)',
-    border: 'rgba(148, 163, 184, 0.35)',
+    color: '#64748b',
+    bg: 'rgba(148, 163, 184, 0.12)',
+    border: 'rgba(148, 163, 184, 0.25)',
     dot: '#64748b',
   },
 };
-
-const KERALA_DISTRICTS = [
-  'All Districts',
-  'Ernakulam (Kochi)',
-  'Thiruvananthapuram',
-  'Thrissur',
-  'Kozhikode',
-  'Kottayam',
-  'Kollam',
-  'Palakkad',
-  'Malappuram',
-  'Alappuzha',
-  'Kannur',
-  'Pathanamthitta',
-  'Idukki',
-  'Kasaragod',
-  'Wayanad',
-];
 
 const SERVICE_LABELS: Record<string, string> = {
   elderly_care: 'Elderly Daily Assistance',
@@ -252,7 +235,7 @@ export default function DashboardCustomersPage() {
   }, [customers, statusFilter, selectedDistrict, searchQuery]);
 
   return (
-    <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.75rem 2rem 4rem' }}>
+    <div className="animate-fade-in" style={{ maxWidth: '1440px', margin: '0 auto', paddingBottom: '4rem' }}>
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -286,79 +269,78 @@ export default function DashboardCustomersPage() {
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '1.25rem',
-          marginBottom: '2rem',
+          gap: '1rem',
+          marginBottom: '1.25rem',
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
             <h1
               id="customers-page-title"
               style={{
-                fontSize: '1.85rem',
-                fontWeight: 700,
-                color: '#ffffff',
+                fontSize: 'clamp(1.35rem, 3.5vw, 1.85rem)',
+                fontWeight: 800,
+                color: 'var(--text-main, #0f172a)',
                 letterSpacing: '-0.02em',
                 margin: 0,
               }}
             >
-              Customer Accounts & CRM Roster
+              Customer Accounts & CRM
             </h1>
-            <span
+
+            <button
+              id="btn-refresh-customers"
+              onClick={fetchCustomers}
+              title="Refresh Customer Accounts"
               style={{
-                backgroundColor: 'rgba(20, 184, 166, 0.15)',
-                color: '#2dd4bf',
-                border: '1px solid rgba(20, 184, 166, 0.3)',
-                padding: '4px 10px',
-                borderRadius: '12px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.75rem',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                border: '1px solid var(--border-card, #cbd5e1)',
+                color: 'var(--text-secondary, #475569)',
                 fontSize: '0.8rem',
                 fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
               }}
             >
-              Phase 4 CRM
-            </span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M23 4v6h-6M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+              <span>Refresh</span>
+            </button>
           </div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginTop: '0.4rem', margin: 0 }}>
-            Family contacts, patient health profiles, care requirements, and active caregiver assignments.
+
+          <p
+            className="hide-on-mobile"
+            style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.35rem', margin: 0 }}
+          >
+            Family contacts, patient profiles, care requirements, and active caregiver assignments.
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button
-            id="btn-refresh-customers"
-            onClick={fetchCustomers}
-            style={{
-              padding: '0.6rem 1rem',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'var(--text-secondary)',
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-            }}
-          >
-            🔄 Refresh
-          </button>
-
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <button
             id="btn-onboard-customer-modal"
             onClick={() => setShowCreateModal(true)}
             style={{
-              padding: '0.6rem 1.25rem',
+              padding: '0.55rem 1rem',
               borderRadius: '8px',
-              backgroundColor: '#14b8a6',
+              backgroundColor: '#0d9488',
               border: 'none',
               color: '#ffffff',
               fontWeight: 600,
-              fontSize: '0.875rem',
+              fontSize: '0.825rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 14px rgba(20, 184, 166, 0.35)',
+              gap: '0.45rem',
+              boxShadow: '0 4px 14px rgba(13, 148, 136, 0.3)',
+              whiteSpace: 'nowrap',
             }}
           >
             <span>+</span> Onboard New Customer
@@ -366,8 +348,9 @@ export default function DashboardCustomersPage() {
         </div>
       </div>
 
-      {/* KPI Metric Cards */}
+      {/* KPI Metric Cards (Desktop Only - Mobile uses horizontal status filter tabs below) */}
       <div
+        className="hide-on-mobile"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -387,7 +370,7 @@ export default function DashboardCustomersPage() {
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Total Client Accounts
           </div>
-          <div id="stat-total-customers" style={{ fontSize: '1.85rem', fontWeight: 700, color: '#ffffff', marginTop: '0.35rem' }}>
+          <div id="stat-total-customers" style={{ fontSize: '1.85rem', fontWeight: 700, color: 'var(--text-main, #0f172a)', marginTop: '0.35rem' }}>
             {stats.total}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -400,7 +383,7 @@ export default function DashboardCustomersPage() {
           onClick={() => setStatusFilter('active')}
           style={{
             backgroundColor: 'var(--bg-card)',
-            border: statusFilter === 'active' ? '1px solid #10b981' : '1px solid var(--border-card)',
+            border: statusFilter === 'active' ? '1px solid #059669' : '1px solid var(--border-card)',
             borderRadius: '12px',
             padding: '1.25rem',
             cursor: 'pointer',
@@ -408,14 +391,14 @@ export default function DashboardCustomersPage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.8rem', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.8rem', color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               ● Active In-Home Care
             </span>
-            <span style={{ fontSize: '0.75rem', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '10px' }}>
+            <span style={{ fontSize: '0.75rem', color: '#059669', backgroundColor: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: '10px' }}>
               Primary Filter
             </span>
           </div>
-          <div id="stat-active-customers" style={{ fontSize: '1.85rem', fontWeight: 700, color: '#34d399', marginTop: '0.35rem' }}>
+          <div id="stat-active-customers" style={{ fontSize: '1.85rem', fontWeight: 700, color: '#059669', marginTop: '0.35rem' }}>
             {stats.active}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -428,7 +411,7 @@ export default function DashboardCustomersPage() {
           onClick={() => setStatusFilter('pending')}
           style={{
             backgroundColor: 'var(--bg-card)',
-            border: statusFilter === 'pending' ? '1px solid #f59e0b' : '1px solid var(--border-card)',
+            border: statusFilter === 'pending' ? '1px solid #d97706' : '1px solid var(--border-card)',
             borderRadius: '12px',
             padding: '1.25rem',
             cursor: 'pointer',
@@ -436,14 +419,14 @@ export default function DashboardCustomersPage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.8rem', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.8rem', color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
               ● Pending Assignment
             </span>
-            <span style={{ fontSize: '0.75rem', color: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.15)', padding: '2px 8px', borderRadius: '10px' }}>
+            <span style={{ fontSize: '0.75rem', color: '#d97706', backgroundColor: 'rgba(245, 158, 11, 0.12)', padding: '2px 8px', borderRadius: '10px' }}>
               Action Required
             </span>
           </div>
-          <div id="stat-pending-customers" style={{ fontSize: '1.85rem', fontWeight: 700, color: '#fbbf24', marginTop: '0.35rem' }}>
+          <div id="stat-pending-customers" style={{ fontSize: '1.85rem', fontWeight: 700, color: '#d97706', marginTop: '0.35rem' }}>
             {stats.pending}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -456,16 +439,16 @@ export default function DashboardCustomersPage() {
           onClick={() => setStatusFilter('paused')}
           style={{
             backgroundColor: 'var(--bg-card)',
-            border: statusFilter === 'paused' ? '1px solid #38bdf8' : '1px solid var(--border-card)',
+            border: statusFilter === 'paused' ? '1px solid #0284c7' : '1px solid var(--border-card)',
             borderRadius: '12px',
             padding: '1.25rem',
             cursor: 'pointer',
           }}
         >
-          <div style={{ fontSize: '0.8rem', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+          <div style={{ fontSize: '0.8rem', color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
             ● Temporarily Paused
           </div>
-          <div id="stat-paused-customers" style={{ fontSize: '1.85rem', fontWeight: 700, color: '#38bdf8', marginTop: '0.35rem' }}>
+          <div id="stat-paused-customers" style={{ fontSize: '1.85rem', fontWeight: 700, color: '#0284c7', marginTop: '0.35rem' }}>
             {stats.paused}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -478,19 +461,17 @@ export default function DashboardCustomersPage() {
       <div
         style={{
           display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '1rem',
+          flexDirection: 'column',
+          gap: '0.75rem',
           backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-card)',
           borderRadius: '12px',
           padding: '0.75rem 1rem',
-          marginBottom: '1.5rem',
+          marginBottom: '1.25rem',
         }}
       >
         {/* Status Filter Tabs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="mobile-scroll-x" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'nowrap', overflowX: 'auto', width: '100%', minWidth: 0, paddingBottom: '0.25rem' }}>
           {[
             { id: 'all', label: 'All Customers', count: stats.total },
             { id: 'active', label: 'Active Care', count: stats.active, color: '#10b981' },
@@ -511,17 +492,19 @@ export default function DashboardCustomersPage() {
                   fontWeight: 600,
                   backgroundColor: isActive
                     ? tab.color
-                      ? `rgba(${tab.color === '#10b981' ? '16, 185, 129' : tab.color === '#f59e0b' ? '245, 158, 11' : '56, 189, 248'}, 0.2)`
-                      : 'rgba(255, 255, 255, 0.15)'
+                      ? `rgba(${tab.color === '#059669' ? '16, 185, 129' : tab.color === '#d97706' ? '245, 158, 11' : '56, 189, 248'}, 0.15)`
+                      : '#f1f5f9'
                     : 'transparent',
-                  color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                  color: isActive ? (tab.color || 'var(--text-main)') : 'var(--text-secondary)',
                   border: isActive
-                    ? `1px solid ${tab.color || 'rgba(255, 255, 255, 0.3)'}`
+                    ? `1px solid ${tab.color || 'var(--border-card)'}`
                     : '1px solid transparent',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.4rem',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -531,8 +514,8 @@ export default function DashboardCustomersPage() {
                     fontSize: '0.72rem',
                     padding: '1px 6px',
                     borderRadius: '10px',
-                    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                    color: isActive ? '#ffffff' : 'var(--text-muted)',
+                    backgroundColor: isActive ? 'rgba(0, 0, 0, 0.06)' : 'rgba(0, 0, 0, 0.03)',
+                    color: isActive ? 'var(--text-main)' : 'var(--text-muted)',
                   }}
                 >
                   {tab.count}
@@ -543,8 +526,8 @@ export default function DashboardCustomersPage() {
         </div>
 
         {/* Search & District Filter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap', width: '100%' }}>
+          <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: '180px' }}>
             <input
               id="customer-search-input"
               type="text"
@@ -552,14 +535,14 @@ export default function DashboardCustomersPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                width: '100%',
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                border: '1px solid var(--border-card, #e2e8f0)',
                 borderRadius: '8px',
-                padding: '0.45rem 0.85rem',
+                padding: '0.5rem 0.85rem',
                 fontSize: '0.85rem',
-                color: '#ffffff',
+                color: 'var(--text-main, #0f172a)',
                 outline: 'none',
-                minWidth: '220px',
               }}
             />
           </form>
@@ -569,14 +552,15 @@ export default function DashboardCustomersPage() {
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
             style={{
-              backgroundColor: 'rgba(11, 17, 32, 0.7)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              backgroundColor: 'var(--bg-surface, #ffffff)',
+              border: '1px solid var(--border-card, #e2e8f0)',
               borderRadius: '8px',
-              padding: '0.45rem 0.85rem',
+              padding: '0.5rem 0.85rem',
               fontSize: '0.85rem',
-              color: '#ffffff',
+              color: 'var(--text-main, #0f172a)',
               outline: 'none',
               cursor: 'pointer',
+              minWidth: '140px',
             }}
           >
             {KERALA_DISTRICTS.map((dist) => (
@@ -596,7 +580,7 @@ export default function DashboardCustomersPage() {
           border: '1px solid var(--border-card)',
           borderRadius: '14px',
           overflow: 'hidden',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
         }}
       >
         {loading ? (
@@ -606,8 +590,8 @@ export default function DashboardCustomersPage() {
                 width: '36px',
                 height: '36px',
                 margin: '0 auto 1rem',
-                border: '3px solid rgba(20, 184, 166, 0.2)',
-                borderTop: '3px solid #14b8a6',
+                border: '3px solid rgba(13, 148, 136, 0.2)',
+                borderTop: '3px solid #0d9488',
                 borderRadius: '50%',
                 animation: 'spin 0.8s linear infinite',
               }}
@@ -615,7 +599,7 @@ export default function DashboardCustomersPage() {
             Loading Customer CRM accounts...
           </div>
         ) : error ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#f87171' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#dc2626' }}>
             <p>{error}</p>
             <button
               onClick={fetchCustomers}
@@ -623,7 +607,7 @@ export default function DashboardCustomersPage() {
                 marginTop: '1rem',
                 padding: '0.5rem 1rem',
                 borderRadius: '6px',
-                backgroundColor: '#14b8a6',
+                backgroundColor: '#0d9488',
                 border: 'none',
                 color: '#ffffff',
                 cursor: 'pointer',
@@ -635,7 +619,7 @@ export default function DashboardCustomersPage() {
         ) : filteredCustomers.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>👥</div>
-            <h3 style={{ fontSize: '1.15rem', color: '#ffffff', margin: '0 0 0.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem', color: 'var(--text-main, #0f172a)', margin: '0 0 0.5rem', fontWeight: 600 }}>
               No Customers Found
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', maxWidth: '420px', margin: '0 auto 1.5rem' }}>
@@ -654,9 +638,9 @@ export default function DashboardCustomersPage() {
               style={{
                 padding: '0.55rem 1.15rem',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#ffffff',
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                border: '1px solid var(--border-card, #e2e8f0)',
+                color: 'var(--text-main, #0f172a)',
                 fontSize: '0.85rem',
                 cursor: 'pointer',
               }}
@@ -665,7 +649,8 @@ export default function DashboardCustomersPage() {
             </button>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <>
+            <div className="hide-on-mobile" style={{ overflowX: 'auto' }}>
             <table
               id="customers-table"
               style={{
@@ -678,7 +663,7 @@ export default function DashboardCustomersPage() {
               <thead>
                 <tr
                   style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                    backgroundColor: 'var(--bg-surface-elevated, #f8fafc)',
                     borderBottom: '1px solid var(--border-card)',
                     color: 'var(--text-muted)',
                     fontSize: '0.75rem',
@@ -704,7 +689,7 @@ export default function DashboardCustomersPage() {
                     <tr
                       key={cust.id}
                       style={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                        borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
                         transition: 'background-color 0.15s ease',
                       }}
                     >
@@ -714,7 +699,7 @@ export default function DashboardCustomersPage() {
                           <Link
                             href={`/dashboard/customers/${cust.id}`}
                             style={{
-                              color: '#ffffff',
+                              color: 'var(--text-main, #0f172a)',
                               fontWeight: 700,
                               fontSize: '0.95rem',
                               textDecoration: 'none',
@@ -726,8 +711,8 @@ export default function DashboardCustomersPage() {
                             style={{
                               fontFamily: 'monospace',
                               fontSize: '0.72rem',
-                              color: '#2dd4bf',
-                              backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                              color: '#0f766e',
+                              backgroundColor: 'rgba(13, 148, 136, 0.1)',
                               padding: '2px 6px',
                               borderRadius: '4px',
                             }}
@@ -761,13 +746,13 @@ export default function DashboardCustomersPage() {
 
                       {/* Service & Location */}
                       <td style={{ padding: '1.1rem 1.25rem', verticalAlign: 'top' }}>
-                        <div style={{ fontWeight: 600, color: '#e2e8f0' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-main, #0f172a)' }}>
                           {SERVICE_LABELS[cust.serviceType] || cust.serviceType}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                           {DURATION_LABELS[cust.duration] || cust.duration} • Start: {cust.startDate}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#2dd4bf', marginTop: '2px' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#0f766e', marginTop: '2px' }}>
                           📍 {cust.district}
                         </div>
                       </td>
@@ -776,7 +761,7 @@ export default function DashboardCustomersPage() {
                       <td style={{ padding: '1.1rem 1.25rem', verticalAlign: 'top' }}>
                         {cust.assignedCaregiver ? (
                           <div>
-                            <div style={{ fontWeight: 600, color: '#ffffff' }}>
+                            <div style={{ fontWeight: 600, color: 'var(--text-main, #0f172a)' }}>
                               👩‍⚕️ {cust.assignedCaregiver.fullName}
                             </div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -788,9 +773,9 @@ export default function DashboardCustomersPage() {
                             <span
                               style={{
                                 fontSize: '0.75rem',
-                                color: '#fbbf24',
+                                color: '#d97706',
                                 backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                                border: '1px solid rgba(245, 158, 11, 0.3)',
+                                border: '1px solid rgba(245, 158, 11, 0.25)',
                                 padding: '3px 8px',
                                 borderRadius: '10px',
                                 fontWeight: 500,
@@ -803,7 +788,7 @@ export default function DashboardCustomersPage() {
                                 href={`/dashboard/customers/${cust.id}`}
                                 style={{
                                   fontSize: '0.75rem',
-                                  color: '#2dd4bf',
+                                  color: '#0d9488',
                                   textDecoration: 'underline',
                                 }}
                               >
@@ -816,7 +801,7 @@ export default function DashboardCustomersPage() {
 
                       {/* Family Contact */}
                       <td style={{ padding: '1.1rem 1.25rem', verticalAlign: 'top' }}>
-                        <div style={{ fontWeight: 600, color: '#ffffff' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-main, #0f172a)' }}>
                           {cust.primaryContactName}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
@@ -829,7 +814,7 @@ export default function DashboardCustomersPage() {
                             rel="noreferrer"
                             style={{
                               fontSize: '0.75rem',
-                              color: '#10b981',
+                              color: '#059669',
                               textDecoration: 'none',
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -875,9 +860,9 @@ export default function DashboardCustomersPage() {
                             display: 'inline-block',
                             padding: '0.45rem 0.85rem',
                             borderRadius: '6px',
-                            backgroundColor: 'rgba(20, 184, 166, 0.15)',
-                            border: '1px solid rgba(20, 184, 166, 0.35)',
-                            color: '#2dd4bf',
+                            backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                            border: '1px solid rgba(13, 148, 136, 0.25)',
+                            color: '#0f766e',
                             fontSize: '0.8rem',
                             fontWeight: 600,
                             textDecoration: 'none',
@@ -892,6 +877,361 @@ export default function DashboardCustomersPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Touch Cards Feed (show-on-mobile-block) */}
+          <div
+            className="show-on-mobile-block"
+            id="mobile-customers-feed"
+            style={{
+              display: 'none',
+              width: '100%',
+              padding: '0.75rem 0.75rem 1rem 0.75rem',
+              boxSizing: 'border-box',
+            }}
+          >
+            {filteredCustomers.map((cust) => {
+              const statusConf = STATUS_CONFIG[cust.status] || STATUS_CONFIG.pending;
+              const cleanPhone = cust.phone ? cust.phone.replace(/[^0-9]/g, '') : '';
+              const whatsappUrl = `https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone}`;
+              const initials = cust.patientName
+                ? cust.patientName
+                    .split(' ')
+                    .map((n: string) => n[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase()
+                : 'PT';
+
+              return (
+                <div
+                  key={`mobile-cust-${cust.id}`}
+                  id={`mobile-customer-card-${cust.id}`}
+                  className="glass-card"
+                  style={{
+                    padding: '1rem',
+                    borderRadius: 'var(--radius-lg, 12px)',
+                    border: `1px solid ${statusConf.border}`,
+                    backgroundColor: '#ffffff',
+                    marginBottom: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {/* Card Header: Patient Avatar, Name & Reference, Status Pill */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem',
+                      width: '100%',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem', minWidth: 0, flex: 1 }}>
+                      <div
+                        style={{
+                          width: '38px',
+                          height: '38px',
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                          border: '1px solid rgba(13, 148, 136, 0.3)',
+                          color: '#0f766e',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.85rem',
+                          fontWeight: 700,
+                          flexShrink: 0,
+                          marginTop: '1px',
+                        }}
+                      >
+                        {initials}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0 }}>
+                          <Link
+                            href={`/dashboard/customers/${cust.id}`}
+                            style={{
+                              fontWeight: 700,
+                              fontSize: '0.975rem',
+                              color: 'var(--text-main, #0f172a)',
+                              textDecoration: 'none',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              minWidth: 0,
+                              display: 'block',
+                            }}
+                          >
+                            {cust.patientName}
+                          </Link>
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            flexWrap: 'wrap',
+                            marginTop: '2px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: 'monospace',
+                              fontSize: '0.7rem',
+                              color: '#0f766e',
+                              backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                              padding: '1px 5px',
+                              borderRadius: '4px',
+                              whiteSpace: 'nowrap',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {cust.referenceId}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              color: 'var(--text-muted, #64748b)',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            • {cust.patientAge ? `${cust.patientAge}y, ` : ''}
+                            <span style={{ textTransform: 'capitalize' }}>{cust.patientGender || 'Unspecified'}</span>
+                            {cust.mobilityStatus ? ` • ${cust.mobilityStatus}` : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: '0.25rem 0.65rem',
+                        borderRadius: '9999px',
+                        backgroundColor: statusConf.bg,
+                        border: `1px solid ${statusConf.border}`,
+                        color: statusConf.color,
+                        fontSize: '0.725rem',
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: statusConf.dot }} />
+                      {statusConf.label}
+                    </span>
+                  </div>
+
+                  {/* Condition / Note (if present) */}
+                  {cust.patientCondition && (
+                    <div
+                      style={{
+                        fontSize: '0.78rem',
+                        color: 'var(--text-secondary, #475569)',
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '0.45rem 0.65rem',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      📋 {cust.patientCondition}
+                    </div>
+                  )}
+
+                  {/* Service & Location Badge */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '0.8rem',
+                      color: '#334155',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <div style={{ minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <strong style={{ color: '#0f172a' }}>{SERVICE_LABELS[cust.serviceType] || cust.serviceType}</strong>
+                      <span style={{ color: '#64748b' }}> • {DURATION_LABELS[cust.duration] || cust.duration}</span>
+                    </div>
+                    <div style={{ color: '#0f766e', fontWeight: 600, fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      📍 {cust.district}
+                    </div>
+                  </div>
+
+                  {/* Assigned Caregiver Section */}
+                  <div
+                    style={{
+                      padding: '0.65rem 0.75rem',
+                      borderRadius: '8px',
+                      backgroundColor: cust.assignedCaregiver ? 'rgba(13, 148, 136, 0.06)' : 'rgba(245, 158, 11, 0.08)',
+                      border: cust.assignedCaregiver ? '1px solid rgba(13, 148, 136, 0.2)' : '1px solid rgba(245, 158, 11, 0.25)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    {cust.assignedCaregiver ? (
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '0.72rem', color: '#0f766e', fontWeight: 600 }}>
+                          👩‍⚕️ Assigned Caregiver
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {cust.assignedCaregiver.fullName}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          ₹{cust.assignedCaregiver.dailyRate || 950}/day • {cust.assignedCaregiver.phone}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '0.78rem', color: '#d97706', fontWeight: 600 }}>
+                          ⚠️ No Caregiver Assigned
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                          Awaiting staff matching & assignment
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ flexShrink: 0 }}>
+                      <Link
+                        href={cust.assignedCaregiver ? `/dashboard/customers/${cust.id}` : `/dashboard/matching?customerId=${cust.id}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          backgroundColor: cust.assignedCaregiver ? '#ffffff' : '#0d9488',
+                          border: cust.assignedCaregiver ? '1px solid #cbd5e1' : 'none',
+                          color: cust.assignedCaregiver ? '#0f766e' : '#ffffff',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                          whiteSpace: 'nowrap',
+                          minHeight: '32px',
+                        }}
+                      >
+                        {cust.assignedCaregiver ? 'Change' : '+ Match'}
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Family Contact */}
+                  <div
+                    style={{
+                      borderTop: '1px solid #f1f5f9',
+                      paddingTop: '0.65rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        👤 {cust.primaryContactName}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {cust.relationship?.replace(/_/g, ' ') || 'Family'} • {cust.phone}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 1-Tap Quick Action Grid */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr auto',
+                      gap: '0.5rem',
+                      width: '100%',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <a
+                      id={`mobile-call-${cust.id}`}
+                      href={`tel:${cleanPhone}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.35rem',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '8px',
+                        backgroundColor: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        color: '#0f172a',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        minHeight: '38px',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      📞 Call
+                    </a>
+
+                    <a
+                      id={`mobile-whatsapp-${cust.id}`}
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.35rem',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '8px',
+                        backgroundColor: '#10b981',
+                        color: '#ffffff',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        minHeight: '38px',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      💬 WhatsApp
+                    </a>
+
+                    <Link
+                      id={`mobile-view-${cust.id}`}
+                      href={`/dashboard/customers/${cust.id}`}
+                      title="View Details"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '0.5rem 0.85rem',
+                        borderRadius: '8px',
+                        backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                        border: '1px solid rgba(13, 148, 136, 0.25)',
+                        color: '#0f766e',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        minHeight: '38px',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      →
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
       </div>
 
@@ -905,7 +1245,7 @@ export default function DashboardCustomersPage() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
@@ -924,7 +1264,7 @@ export default function DashboardCustomersPage() {
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
             }}
           >
             <div
@@ -933,11 +1273,11 @@ export default function DashboardCustomersPage() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 marginBottom: '1.5rem',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                borderBottom: '1px solid var(--border-card)',
                 paddingBottom: '0.75rem',
               }}
             >
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main, #0f172a)', margin: 0 }}>
                 Onboard New Client / Patient Account
               </h3>
               <button
@@ -956,8 +1296,8 @@ export default function DashboardCustomersPage() {
 
             <form onSubmit={handleCreateCustomer}>
               {/* Patient Demographics */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-                <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                     Patient Full Name *
                   </label>
@@ -969,11 +1309,11 @@ export default function DashboardCustomersPage() {
                     placeholder="e.g. K. V. Raman"
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   />
@@ -990,11 +1330,11 @@ export default function DashboardCustomersPage() {
                     placeholder="75"
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   />
@@ -1009,11 +1349,11 @@ export default function DashboardCustomersPage() {
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, patientGender: e.target.value })}
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   >
@@ -1036,18 +1376,18 @@ export default function DashboardCustomersPage() {
                   placeholder="e.g. Post-stroke rehabilitation, catheter care"
                   style={{
                     width: '100%',
-                    backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    backgroundColor: 'var(--bg-surface, #ffffff)',
+                    border: '1px solid var(--border-card, #e2e8f0)',
                     borderRadius: '6px',
                     padding: '0.5rem',
-                    color: '#ffffff',
+                    color: 'var(--text-main, #0f172a)',
                     marginTop: '4px',
                   }}
                 />
               </div>
 
               {/* Family Contact */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                     Contact Person Name *
@@ -1060,11 +1400,11 @@ export default function DashboardCustomersPage() {
                     placeholder="e.g. Dr. Thomas Varghese"
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   />
@@ -1079,11 +1419,11 @@ export default function DashboardCustomersPage() {
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, relationship: e.target.value })}
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   >
@@ -1106,11 +1446,11 @@ export default function DashboardCustomersPage() {
                     placeholder="+91 98470 12345"
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   />
@@ -1118,7 +1458,7 @@ export default function DashboardCustomersPage() {
               </div>
 
               {/* Service & Shift */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                     Service Type
@@ -1128,11 +1468,11 @@ export default function DashboardCustomersPage() {
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, serviceType: e.target.value })}
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   >
@@ -1153,11 +1493,11 @@ export default function DashboardCustomersPage() {
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, duration: e.target.value })}
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   >
@@ -1176,11 +1516,11 @@ export default function DashboardCustomersPage() {
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, district: e.target.value })}
                     style={{
                       width: '100%',
-                      backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      backgroundColor: 'var(--bg-surface, #ffffff)',
+                      border: '1px solid var(--border-card, #e2e8f0)',
                       borderRadius: '6px',
                       padding: '0.5rem',
-                      color: '#ffffff',
+                      color: 'var(--text-main, #0f172a)',
                       marginTop: '4px',
                     }}
                   >
@@ -1203,11 +1543,11 @@ export default function DashboardCustomersPage() {
                   onChange={(e) => setNewCustomerForm({ ...newCustomerForm, status: e.target.value })}
                   style={{
                     width: '100%',
-                    backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    backgroundColor: 'var(--bg-surface, #ffffff)',
+                    border: '1px solid var(--border-card, #e2e8f0)',
                     borderRadius: '6px',
                     padding: '0.5rem',
-                    color: '#ffffff',
+                    color: 'var(--text-main, #0f172a)',
                     marginTop: '4px',
                   }}
                 >
@@ -1224,9 +1564,9 @@ export default function DashboardCustomersPage() {
                   style={{
                     padding: '0.6rem 1.2rem',
                     borderRadius: '8px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-secondary)',
+                    backgroundColor: 'var(--bg-surface-elevated, #f1f5f9)',
+                    border: '1px solid var(--border-card, #e2e8f0)',
+                    color: 'var(--text-secondary, #475569)',
                     cursor: 'pointer',
                   }}
                 >
@@ -1239,7 +1579,7 @@ export default function DashboardCustomersPage() {
                   style={{
                     padding: '0.6rem 1.5rem',
                     borderRadius: '8px',
-                    backgroundColor: '#14b8a6',
+                    backgroundColor: '#0d9488',
                     border: 'none',
                     color: '#ffffff',
                     fontWeight: 600,

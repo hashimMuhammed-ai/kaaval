@@ -314,7 +314,7 @@ describe('CustomersService', () => {
       await service.findAll('tenant-123', {}, UserRole.CAREGIVER, 'user-caregiver-1');
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'cust.assigned_caregiver_id = :cgId',
+        'cust.assignedCaregiverId = :cgId',
         { cgId: 'cg-assigned-uuid' }
       );
     });

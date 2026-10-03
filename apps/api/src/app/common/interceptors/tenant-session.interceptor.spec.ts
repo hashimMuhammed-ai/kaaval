@@ -90,6 +90,66 @@ describe('TenantSessionInterceptor', () => {
     expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
   });
 
+  it('should bypass session setup and database queries for /health directly', async () => {
+    mockRequest.url = '/health';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result$ = interceptor.intercept(mockExecutionContext, mockCallHandler);
+    const result = await lastValueFrom(result$);
+
+    expect(result).toEqual({ data: 'success' });
+    expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
+    expect(mockQueryRunner.query).not.toHaveBeenCalled();
+  });
+
+  it('should bypass session setup and database queries for /health/?query=1 with trailing slash and query string', async () => {
+    mockRequest.originalUrl = '/health/?query=1';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result$ = interceptor.intercept(mockExecutionContext, mockCallHandler);
+    const result = await lastValueFrom(result$);
+
+    expect(result).toEqual({ data: 'success' });
+    expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
+    expect(mockQueryRunner.query).not.toHaveBeenCalled();
+  });
+
+  it('should bypass session setup and database queries for /api/health directly', async () => {
+    mockRequest.originalUrl = '/api/health';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result$ = interceptor.intercept(mockExecutionContext, mockCallHandler);
+    const result = await lastValueFrom(result$);
+
+    expect(result).toEqual({ data: 'success' });
+    expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
+    expect(mockQueryRunner.query).not.toHaveBeenCalled();
+  });
+
+  it('should bypass session setup and database queries for /api/health/?probe=live with trailing slash and query string', async () => {
+    mockRequest.originalUrl = '/api/health/?probe=live';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result$ = interceptor.intercept(mockExecutionContext, mockCallHandler);
+    const result = await lastValueFrom(result$);
+
+    expect(result).toEqual({ data: 'success' });
+    expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
+    expect(mockQueryRunner.query).not.toHaveBeenCalled();
+  });
+
+  it('should bypass session setup and database queries for /HEALTH in case-insensitive manner', async () => {
+    mockRequest.originalUrl = '/HEALTH';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result$ = interceptor.intercept(mockExecutionContext, mockCallHandler);
+    const result = await lastValueFrom(result$);
+
+    expect(result).toEqual({ data: 'success' });
+    expect(mockDataSource.createQueryRunner).not.toHaveBeenCalled();
+    expect(mockQueryRunner.query).not.toHaveBeenCalled();
+  });
+
   it('should extract context, configure queryRunner with set_tenant_session, and release on finalize', async () => {
     mockCallHandler.handle = jest.fn().mockImplementation(() => {
       expect(TenantContextStorage.getTenantId()).toBe('tenant-uuid-1');

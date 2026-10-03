@@ -140,6 +140,18 @@ describe('AnalyticsController', () => {
       expect(response.message).toContain('enqueued as background BullMQ job');
       expect(response.data).toEqual({ jobId: 'bullmq-job-999', status: 'enqueued' });
     });
+
+    it('should fall back to synchronous refresh when async enqueue fails or worker is disabled', async () => {
+      schedulerService.triggerRefreshNow = jest
+        .fn()
+        .mockRejectedValue(new Error('Analytics background worker is disabled (ENABLE_ANALYTICS_WORKER=false).'));
+
+      const response = await controller.refreshMaterializedViews('true', mockUser);
+      expect(schedulerService.triggerRefreshNow).toHaveBeenCalledWith('owner@keralacare.com');
+      expect(service.refreshMaterializedViews).toHaveBeenCalled();
+      expect(response.success).toBe(true);
+      expect(response.message).toContain('refreshed successfully');
+    });
   });
 
   describe('getQueueStatus', () => {

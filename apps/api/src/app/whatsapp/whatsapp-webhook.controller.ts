@@ -40,9 +40,18 @@ export class WhatsAppWebhookController {
     @Query('hub.verify_token') token: string,
     @Query('hub.challenge') challenge: string
   ): string {
-    if (mode === 'subscribe' && token === this.config.webhookVerifyToken) {
+    const isMatched = token === this.config.webhookVerifyToken;
+    console.log('[WhatsApp Webhook Verification] Inbound verification request:', {
+      mode,
+      tokenMatches: isMatched,
+      hasChallenge: Boolean(challenge),
+    });
+
+    if (mode === 'subscribe' && isMatched) {
+      console.log('[WhatsApp Webhook Verification] Verification SUCCESS. Returning challenge to Meta.');
       return challenge;
     }
+    console.warn('[WhatsApp Webhook Verification] Verification FAILED: Invalid token or mode.');
     throw new ForbiddenException('Invalid WhatsApp webhook verification token.');
   }
 
@@ -55,14 +64,29 @@ export class WhatsAppWebhookController {
     @Body() body: any,
     @Headers('x-hub-signature-256') signature?: string
   ): Promise<{ status: string }> {
+    console.log('[WhatsApp Webhook] Inbound event received at /whatsapp/webhook:', {
+      hasSignatureHeader: Boolean(signature),
+      object: body?.object,
+      entryCount: body?.entry?.length || 0,
+      timestamp: new Date().toISOString(),
+    });
+    console.log('[WhatsApp Webhook Payload]:', JSON.stringify(body, null, 2));
+
     // Verify HMAC-SHA256 signature if configured
     const rawBody = typeof body === 'string' ? body : JSON.stringify(body);
     if (!this.whatsappService.verifyWebhookSignature(rawBody, signature)) {
+      console.error('[WhatsApp Webhook] Signature verification failed. Event rejected.');
       throw new ForbiddenException('Invalid Meta webhook signature.');
     }
 
-    await this.whatsappService.processWebhookEvent(body);
-    return { status: 'EVENT_RECEIVED' };
+    try {
+      const result = await this.whatsappService.processWebhookEvent(body);
+      console.log('[WhatsApp Webhook] Event processed successfully:', result);
+      return { status: 'EVENT_RECEIVED' };
+    } catch (err: any) {
+      console.error('[WhatsApp Webhook] Error processing event:', err.message, err.stack);
+      return { status: 'EVENT_RECEIVED' };
+    }
   }
 
   /**

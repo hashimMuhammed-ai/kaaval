@@ -58,11 +58,61 @@ describe('TenantSessionGuard', () => {
     mockReflector.getAllAndOverride.mockReturnValue(true);
     const result = await guard.canActivate(mockExecutionContext);
 
-    expect(result).toBe(true);
+    expect(result).toEqual(true);
     expect(mockReflector.getAllAndOverride).toHaveBeenCalledWith(SKIP_TENANT_SESSION_KEY, [
       expect.anything(),
       expect.anything(),
     ]);
+  });
+
+  it('should return true and skip processing for /health directly', async () => {
+    mockRequest.url = '/health';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result = await guard.canActivate(mockExecutionContext);
+
+    expect(result).toBe(true);
+    expect(mockRequest.tenantContext).toBeUndefined();
+  });
+
+  it('should return true and skip processing for /health/?query=1 with trailing slash and query string', async () => {
+    mockRequest.originalUrl = '/health/?query=1';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result = await guard.canActivate(mockExecutionContext);
+
+    expect(result).toBe(true);
+    expect(mockRequest.tenantContext).toBeUndefined();
+  });
+
+  it('should return true and skip processing for /api/health directly', async () => {
+    mockRequest.originalUrl = '/api/health';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result = await guard.canActivate(mockExecutionContext);
+
+    expect(result).toBe(true);
+    expect(mockRequest.tenantContext).toBeUndefined();
+  });
+
+  it('should return true and skip processing for /api/health/?probe=live with trailing slash and query string', async () => {
+    mockRequest.originalUrl = '/api/health/?probe=live';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result = await guard.canActivate(mockExecutionContext);
+
+    expect(result).toBe(true);
+    expect(mockRequest.tenantContext).toBeUndefined();
+  });
+
+  it('should return true and skip processing for /HEALTH in case-insensitive manner', async () => {
+    mockRequest.originalUrl = '/HEALTH';
+    mockReflector.getAllAndOverride.mockReturnValue(false);
+
+    const result = await guard.canActivate(mockExecutionContext);
+
+    expect(result).toBe(true);
+    expect(mockRequest.tenantContext).toBeUndefined();
   });
 
   it('should extract tenantContext from request.user and attach to request', async () => {

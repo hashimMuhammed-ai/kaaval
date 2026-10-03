@@ -35,6 +35,9 @@ export default function ContactPage() {
     }, 600);
   };
 
+  const contactPhone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || '+1 (555) 635-4420';
+  const cleanPhone = contactPhone.replace(/[^0-9]/g, '');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
@@ -110,7 +113,7 @@ export default function ContactPage() {
                 For immediate discharges & 60-min urgent dispatch.
               </p>
               <a
-                href="tel:+919876543210"
+                href={`tel:+${cleanPhone}`}
                 id="contact-call-btn"
                 style={{
                   color: 'var(--primary-400)',
@@ -121,7 +124,7 @@ export default function ContactPage() {
                   gap: '0.5rem',
                 }}
               >
-                +91 98765 43210 &rarr;
+                {contactPhone} &rarr;
               </a>
             </div>
 
@@ -152,7 +155,7 @@ export default function ContactPage() {
                 Send requirements, doctor discharge notes & get quotes.
               </p>
               <a
-                href="https://wa.me/919876543210?text=Hello%2C%20I%20would%20like%20to%20enquire%20about%20caregiver%20services."
+                href={`https://wa.me/${cleanPhone}?text=Hello%2C%20I%20would%20like%20to%20enquire%20about%20caregiver%20services.`}
                 target="_blank"
                 rel="noreferrer"
                 id="contact-whatsapp-btn"

@@ -49,7 +49,7 @@ assuming this volume from day one — no shortcuts that only work for a demo.
   only (`user_id` / linked caregiver ID).
 - JWT payload carries `userId`, `tenantId`, and `role`. A NestJS guard/interceptor
   sets the Postgres session variables per request so RLS applies automatically.
-- Tenant resolution via subdomain (e.g. `agencyname.app.com`).
+- Tenant resolution: currently path-based (`/t/:tenantSlug/...`) on free-tier infrastructure without custom domain; automatically transitions back to subdomain-based routing (`agencyname.app.com`) once a custom domain with wildcard DNS is attached (see Section 8).
 - **Account Provisioning Hierarchy (Strictly Top-Down — No Public Signup):**
   There is zero public signup anywhere on the platform. Accounts are created
   strictly from the top down:
@@ -142,3 +142,52 @@ templates, public self-serve registration. Revisit later if a client asks.
 - **PWA:** installable, offline-capable shell, web push notifications for new leads /
   replacement SLA alerts for Owner/Staff, and ultra-simple mobile PWA interface
   for Caregiver self-service.
+
+## 8. Deployment & Free-Tier Infrastructure
+
+To validate the product and secure the first paying client with zero fixed monthly infrastructure overhead, the platform is configured for free-tier cloud deployment:
+
+### Free-Tier Stack Architecture
+- **Backend API & Queue Workers (Render):**
+  - NestJS API running on Render's free web service tier.
+  - Reads `PORT` dynamically from Render's runtime environment (listens on `0.0.0.0`).
+  - BullMQ background workers run in-process with the API server to avoid the cost of an independent background worker instance.
+  - Exposes `GET /health` (and `GET /api/health`) returning `200 OK` for platform health checks and keep-alive pings.
+  - Build command: `npm install && npm run build`
+  - Start command: `npm run start:prod` (configured in `package.json` and `render.yaml`).
+- **Database (Neon PostgreSQL):**
+  - Serverless PostgreSQL with native `postgis` spatial extension enabled.
+  - Connected via `DATABASE_URL` with SSL connection pooling (`sslmode=require`, `rejectUnauthorized: false`).
+  - Full Row-Level Security (RLS) enforcement and migrations executed seamlessly via `npm run migration:run`.
+- **Background Queue & Cache (Upstash Redis):**
+  - Serverless Redis instance connected via TLS (`REDIS_URL`, `rediss://...`).
+  - Powers BullMQ job queues (WhatsApp lead ingestion, analytics cron refresh) and Redis caching for the owner analytics materialized view.
+- **Object Storage (Cloudflare R2):**
+  - S3-compatible storage for caregiver certifications, ID proofs, and compliance documents.
+  - Zero egress fees. Configured via `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET_NAME`.
+- **Frontend PWA (Vercel):**
+  - Next.js web application deployed on Vercel's free hobby tier.
+  - PWA manifest (`manifest.json`) and service worker (`sw.js`) operate natively on `*.vercel.app` subdomains.
+  - Backend API base URL configured dynamically via `NEXT_PUBLIC_API_URL`.
+- **Keep-Alive & Monitoring (UptimeRobot):**
+  - Configured to ping `GET /health` on the Render backend every 5 minutes to prevent the free instance from spinning down due to inactivity.
+
+### Tenant Resolution — Path-Based Routing & Migration Path
+- **Free-Tier Constraint:** Free hosting domains (such as `*.vercel.app` and `*.onrender.com`) do not permit wildcard subdomains (`*.domain.com`).
+- **Path-Based Routing:** Tenant resolution is temporarily adapted from subdomain-based (`agencyname.app.com`) to path-based (`/t/:tenantSlug/...`).
+  - Next.js edge middleware transparently rewrites `/t/:tenantSlug/*` to internal application routes while retaining the path in the user's browser and injecting the `x-tenant-slug` header.
+  - NestJS middleware resolves the tenant via `tenant_slug` (or URL path / header) and attaches the tenant context before rewriting the request URL to standard API endpoints.
+  - The `tenants` table includes a dedicated, indexed `tenant_slug` column.
+  - **Isolation Guarantee:** The underlying multi-tenant architecture remains 100% identical. PostgreSQL Row-Level Security (RLS), tenant session parameters (`app.current_tenant_id`), and all database relationships are strictly anchored to the immutable `tenant_id` UUID.
+- **Custom Domain Switch (Future):** Once the agency acquires a custom domain (e.g., `caregiverplatform.com`) with wildcard DNS (`*.caregiverplatform.com`), the routing layer will revert directly to subdomain resolution without requiring any schema migrations or database changes.
+
+### WhatsApp Integration — Test Mode Limitations & Production Transition
+- **Current Mode:** Configured for Meta's WhatsApp Business Cloud API Test Mode.
+  - Uses Meta's sandbox test phone number.
+  - Outbound messaging is restricted to up to 5 verified recipient phone numbers added in the Meta Developer Portal.
+  - Inbound webhook verification handled via `WHATSAPP_WEBHOOK_VERIFY_TOKEN` and authenticated via `WHATSAPP_ACCESS_TOKEN`.
+  - Does not require upfront Meta Business Verification or WhatsApp display name review.
+- **Commercial Production Transition:**
+  - Before onboarding real agency customers and public care recipients, the platform must be registered with a verified Meta Business Manager account.
+  - A dedicated permanent phone number (clean SIM or virtual DID) must be acquired and registered as an official WhatsApp Business phone number.
+  - Production WhatsApp message templates (for notifications, replacement SLAs, and feedback) must be submitted for Meta approval.

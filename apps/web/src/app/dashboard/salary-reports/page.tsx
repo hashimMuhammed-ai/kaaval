@@ -400,7 +400,7 @@ export default function SalaryReportsPage() {
   }, [payments, searchQuery]);
 
   return (
-    <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '2rem 1.5rem', minHeight: '100vh' }}>
+    <div style={{ maxWidth: '1440px', margin: '0 auto', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
       {/* Toast Alert */}
       {toastMessage && (
         <div
@@ -433,7 +433,7 @@ export default function SalaryReportsPage() {
           Dashboard
         </Link>
         <span style={{ color: 'var(--text-muted)' }}>/</span>
-        <span style={{ color: '#38bdf8', fontWeight: 600 }}>Monthly Salary & Payroll Reports</span>
+        <span style={{ color: '#0d9488', fontWeight: 600 }}>Monthly Salary & Payroll Reports</span>
       </div>
 
       {/* Top Header & Action Controls */}
@@ -443,7 +443,7 @@ export default function SalaryReportsPage() {
           flexWrap: 'wrap',
           alignItems: 'flex-start',
           justifyContent: 'space-between',
-          gap: '1.5rem',
+          gap: '1.25rem',
           marginBottom: '2rem',
         }}
       >
@@ -452,7 +452,7 @@ export default function SalaryReportsPage() {
             style={{
               fontSize: '2rem',
               fontWeight: 800,
-              color: '#ffffff',
+              color: 'var(--text-main)',
               letterSpacing: '-0.02em',
               margin: '0 0 0.4rem 0',
               display: 'flex',
@@ -466,8 +466,8 @@ export default function SalaryReportsPage() {
                 fontSize: '0.75rem',
                 padding: '0.2rem 0.6rem',
                 borderRadius: 'var(--radius-full)',
-                backgroundColor: 'rgba(20, 184, 166, 0.2)',
-                color: '#2dd4bf',
+                backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                color: '#0f766e',
                 fontWeight: 700,
                 letterSpacing: '0.04em',
               }}
@@ -481,7 +481,7 @@ export default function SalaryReportsPage() {
         </div>
 
         {/* Action Buttons: Recalculate, Export CSV, Export JSON */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
           <button
             id="btn-recalculate-payroll"
             onClick={handleRecalculate}
@@ -1122,20 +1122,20 @@ export default function SalaryReportsPage() {
         >
           <div
             style={{
-              backgroundColor: '#0f172a',
-              border: '1px solid rgba(20, 184, 166, 0.4)',
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: 'var(--radius-xl)',
               maxWidth: '750px',
               width: '100%',
               maxHeight: '85vh',
               overflowY: 'auto',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7)',
+              boxShadow: '0 20px 50px rgba(15, 23, 42, 0.15)',
               padding: '1.75rem',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#ffffff' }}>
+                <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)' }}>
                   Daily Shift Breakdown
                 </h3>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -1272,16 +1272,16 @@ export default function SalaryReportsPage() {
         >
           <div
             style={{
-              backgroundColor: '#0f172a',
-              border: '1px solid rgba(20, 184, 166, 0.4)',
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: 'var(--radius-xl)',
               maxWidth: '480px',
               width: '100%',
               padding: '1.75rem',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7)',
+              boxShadow: '0 20px 50px rgba(15, 23, 42, 0.15)',
             }}
           >
-            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
               {actionType === 'approve'
                 ? 'Approve Salary Statement'
                 : actionType === 'pay'
@@ -1289,7 +1289,7 @@ export default function SalaryReportsPage() {
                 : 'Adjust Statement Deductions'}
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-              Caregiver: <strong style={{ color: '#ffffff' }}>{actionPayment.caregiver?.fullName}</strong> ({actionPayment.periodMonth})
+              Caregiver: <strong style={{ color: 'var(--text-main)' }}>{actionPayment.caregiver?.fullName}</strong> ({actionPayment.periodMonth})
             </p>
 
             {actionType === 'approve' && (

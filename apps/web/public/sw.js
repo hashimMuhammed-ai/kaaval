@@ -1,5 +1,5 @@
 // Service Worker for Caregiver Agency Platform PWA
-const CACHE_NAME = 'caregiver-pwa-v1';
+const CACHE_NAME = 'caregiver-pwa-v2';
 
 const STATIC_PRECACHE_ASSETS = [
   '/offline',

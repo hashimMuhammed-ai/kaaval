@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '../utils/api';
+import { CaregiverStatusBadge } from './caregiver-status-badge';
 
 export interface CustomerData {
   id: string;
@@ -246,6 +247,17 @@ export default function CustomerDetailView({
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [notesText, setNotesText] = useState(customer.notes || '');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Mobile segmented tab navigation for office staff
+  const [mobileTab, setMobileTab] = useState<'overview' | 'caregiver' | 'history'>('overview');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Caregiver assignment modal state
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -560,7 +572,7 @@ export default function CustomerDetailView({
   )}`;
 
   return (
-    <div style={{ maxWidth: '1360px', margin: '0 auto', paddingBottom: '3rem' }}>
+    <div style={{ maxWidth: '1360px', margin: '0 auto', paddingBottom: '6rem' }}>
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -795,6 +807,63 @@ export default function CustomerDetailView({
         </div>
       </div>
 
+      {/* Mobile Segmented View Tabs (show-on-mobile) */}
+      <div
+        className="mobile-scroll-x show-on-mobile"
+        style={{
+          display: 'none',
+          gap: '0.5rem',
+          paddingBottom: '0.65rem',
+          marginBottom: '1rem',
+          width: '100%',
+        }}
+      >
+        {[
+          { id: 'overview', label: '📋 Patient & Overview', count: undefined },
+          { id: 'caregiver', label: '👩‍⚕️ Caregiver & SLA', count: customer.assignedCaregiver ? 'Assigned' : 'Unassigned' },
+          { id: 'history', label: '📜 Placement History', count: historyList.length },
+        ].map((tab) => {
+          const isActive = mobileTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              id={`tab-customer-detail-${tab.id}`}
+              onClick={() => setMobileTab(tab.id as any)}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '20px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                border: isActive ? '1px solid #14b8a6' : '1px solid rgba(255, 255, 255, 0.15)',
+                backgroundColor: isActive ? 'rgba(20, 184, 166, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                color: isActive ? '#2dd4bf' : '#94a3b8',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              <span>{tab.label}</span>
+              {tab.count !== undefined && (
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '1px 6px',
+                    borderRadius: '10px',
+                    backgroundColor: isActive ? 'rgba(20, 184, 166, 0.3)' : 'rgba(255, 255, 255, 0.08)',
+                    color: isActive ? '#ffffff' : '#94a3b8',
+                  }}
+                >
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Grid: 2 Columns (Patient Details & Requirements on Left, Caregiver & Contact on Right) */}
       <div
         style={{
@@ -805,7 +874,7 @@ export default function CustomerDetailView({
         }}
       >
         {/* LEFT COLUMN: Patient Info & Care Requirements */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div style={{ display: (!isMobile || mobileTab === 'overview') ? 'flex' : 'none', flexDirection: 'column', gap: '1.5rem' }}>
           {/* 1. Patient Clinical Profile Card */}
           <div
             id="card-patient-info"
@@ -1246,11 +1315,11 @@ export default function CustomerDetailView({
               rows={4}
               style={{
                 width: '100%',
-                backgroundColor: 'rgba(11, 17, 32, 0.7)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
+                backgroundColor: 'var(--bg-surface, #ffffff)',
+                border: '1px solid var(--border-card, #e2e8f0)',
                 borderRadius: '8px',
                 padding: '0.75rem',
-                color: '#ffffff',
+                color: 'var(--text-main, #0f172a)',
                 fontSize: '0.875rem',
                 fontFamily: 'inherit',
                 resize: 'vertical',
@@ -1266,6 +1335,7 @@ export default function CustomerDetailView({
           <div
             id="card-assigned-caregiver"
             style={{
+              display: (!isMobile || mobileTab === 'caregiver') ? 'block' : 'none',
               backgroundColor: 'var(--bg-card)',
               border: customer.assignedCaregiver
                 ? '1px solid rgba(16, 185, 129, 0.35)'
@@ -1301,20 +1371,10 @@ export default function CustomerDetailView({
               </div>
 
               {customer.assignedCaregiver ? (
-                <span
+                <CaregiverStatusBadge
                   id="caregiver-assigned-status-badge"
-                  style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    color: '#34d399',
-                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                    border: '1px solid rgba(16, 185, 129, 0.35)',
-                    padding: '3px 10px',
-                    borderRadius: '12px',
-                  }}
-                >
-                  ● Assigned & Deployed
-                </span>
+                  status={customer.assignedCaregiver.status || 'assigned'}
+                />
               ) : (
                 <span
                   id="caregiver-unassigned-status-badge"
@@ -1665,6 +1725,7 @@ export default function CustomerDetailView({
           <div
             id="card-assignment-history"
             style={{
+              display: (!isMobile || mobileTab === 'history') ? 'block' : 'none',
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-card)',
               borderRadius: '14px',
@@ -1940,6 +2001,7 @@ export default function CustomerDetailView({
             <div
               id="card-customer-feedback"
               style={{
+                display: (!isMobile || mobileTab === 'history') ? 'block' : 'none',
                 backgroundColor: 'var(--bg-card)',
                 border: '1px solid rgba(245, 158, 11, 0.35)',
                 borderRadius: '14px',
@@ -2020,6 +2082,7 @@ export default function CustomerDetailView({
           <div
             id="card-contact-info"
             style={{
+              display: (!isMobile || mobileTab === 'overview') ? 'block' : 'none',
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-card)',
               borderRadius: '14px',

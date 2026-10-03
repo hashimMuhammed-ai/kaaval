@@ -54,6 +54,13 @@ export class TenantSessionInterceptor implements NestInterceptor {
       return next.handle();
     }
 
+    // Direct path bypass for static health check endpoints (defense-in-depth)
+    const rawPath = request.originalUrl || request.url || request.path || '';
+    const cleanPath = typeof rawPath === 'string' ? rawPath.split('?')[0].toLowerCase().replace(/\/+$/, '') : '';
+    if (cleanPath === '/health' || cleanPath === '/api/health') {
+      return next.handle();
+    }
+
     // Extract tenant session context from authenticated user or request headers
     const sessionContext: TenantSessionContext = RlsContextHelper.extractContext(request);
     request.tenantContext = sessionContext;

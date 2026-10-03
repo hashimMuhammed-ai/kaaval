@@ -1,4 +1,4 @@
-import { getSubdomain } from './subdomain';
+import { getSubdomain, getTenantSlug } from './subdomain';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -6,23 +6,24 @@ const API_BASE_URL =
 export interface ApiFetchOptions extends RequestInit {
   token?: string;
   subdomain?: string;
+  tenantSlug?: string;
 }
 
 /**
- * Enhanced fetch helper that injects Bearer JWT and x-tenant-subdomain headers.
+ * Enhanced fetch helper that injects Bearer JWT, x-tenant-slug, and x-tenant-subdomain headers.
  */
 export async function apiFetch<T = any>(
   endpoint: string,
   options: ApiFetchOptions = {}
 ): Promise<T> {
-  const { token, subdomain, headers = {}, ...rest } = options;
+  const { token, subdomain, tenantSlug, headers = {}, ...rest } = options;
 
   let activeToken = token;
   if (!activeToken && typeof window !== 'undefined') {
     activeToken = localStorage.getItem('auth_token') || undefined;
   }
 
-  const activeSubdomain = subdomain || getSubdomain();
+  const activeTenant = tenantSlug || subdomain || getTenantSlug() || getSubdomain();
 
   const isFormData = typeof FormData !== 'undefined' && rest.body instanceof FormData;
 
@@ -35,8 +36,9 @@ export async function apiFetch<T = any>(
     finalHeaders['Authorization'] = `Bearer ${activeToken}`;
   }
 
-  if (activeSubdomain) {
-    finalHeaders['x-tenant-subdomain'] = activeSubdomain;
+  if (activeTenant) {
+    finalHeaders['x-tenant-slug'] = activeTenant;
+    finalHeaders['x-tenant-subdomain'] = activeTenant;
   }
 
   const url = endpoint.startsWith('http')

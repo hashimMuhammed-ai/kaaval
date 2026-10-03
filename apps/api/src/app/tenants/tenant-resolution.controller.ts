@@ -23,11 +23,16 @@ export class TenantResolutionController {
   @Public()
   async resolveTenant(
     @Req() req: any,
-    @Query('subdomain') querySubdomain?: string
+    @Query('subdomain') querySubdomain?: string,
+    @Query('slug') querySlug?: string
   ): Promise<ResolvedTenantInfo> {
     let tenant = null;
 
-    if (querySubdomain && typeof querySubdomain === 'string') {
+    if (querySlug && typeof querySlug === 'string') {
+      tenant = await this.tenantResolver.resolveBySlug(querySlug);
+    }
+
+    if (!tenant && querySubdomain && typeof querySubdomain === 'string') {
       tenant = await this.tenantResolver.resolveBySubdomain(querySubdomain);
     }
 
@@ -37,10 +42,25 @@ export class TenantResolutionController {
 
     if (!tenant) {
       throw new NotFoundException(
-        'No agency tenant found matching the requested domain or subdomain.'
+        'No agency tenant found matching the requested domain or slug.'
       );
     }
 
+    return this.tenantResolver.toPublicTenantInfo(tenant);
+  }
+
+  /**
+   * Public endpoint to get agency details directly by path slug (/t/:slug).
+   */
+  @Get('by-slug/:slug')
+  @Public()
+  async getBySlug(
+    @Param('slug') slug: string
+  ): Promise<ResolvedTenantInfo> {
+    let tenant = await this.tenantResolver.resolveBySlug(slug);
+    if (!tenant) {
+      tenant = await this.tenantResolver.resolveAndValidate(slug);
+    }
     return this.tenantResolver.toPublicTenantInfo(tenant);
   }
 

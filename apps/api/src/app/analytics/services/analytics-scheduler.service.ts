@@ -7,6 +7,7 @@ import {
   ANALYTICS_REFRESH_JOB,
   DEFAULT_ANALYTICS_REFRESH_CRON,
 } from '../constants/analytics.constants';
+import { RedisQuotaErrorThrottler } from '../../common/utils/redis-connection.helper';
 
 @Injectable()
 export class AnalyticsSchedulerService implements OnModuleInit {
@@ -24,7 +25,22 @@ export class AnalyticsSchedulerService implements OnModuleInit {
       DEFAULT_ANALYTICS_REFRESH_CRON;
   }
 
+  /**
+   * Check whether the background analytics worker is enabled.
+   */
+  isWorkerEnabled(): boolean {
+    const flag = this.configService?.get<string>('ENABLE_ANALYTICS_WORKER');
+    return flag !== 'false' && flag !== '0';
+  }
+
   async onModuleInit() {
+    if (!this.isWorkerEnabled()) {
+      this.logger.log(
+        'Analytics background worker is disabled (ENABLE_ANALYTICS_WORKER=false). Skipping BullMQ repeatable job registration.'
+      );
+      return;
+    }
+
     if (!this.refreshQueue) {
       this.logger.warn('BullMQ refreshQueue not available. Skipping automatic cron setup.');
       return;
@@ -33,9 +49,11 @@ export class AnalyticsSchedulerService implements OnModuleInit {
     try {
       await this.initScheduledJob();
     } catch (err: any) {
-      this.logger.error(
-        `Failed to initialize BullMQ scheduled job on queue ${ANALYTICS_REFRESH_QUEUE}: ${err.message}`,
-        err.stack
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        `BullMQ Scheduler (${ANALYTICS_REFRESH_QUEUE})`,
+        err,
+        'error'
       );
     }
   }
@@ -90,6 +108,12 @@ export class AnalyticsSchedulerService implements OnModuleInit {
    * Trigger an immediate background job to refresh materialized views via BullMQ.
    */
   async triggerRefreshNow(triggeredBy = 'manual'): Promise<{ jobId: string; status: string }> {
+    if (!this.isWorkerEnabled()) {
+      throw new Error(
+        'Analytics background worker is disabled (ENABLE_ANALYTICS_WORKER=false). Cannot enqueue background jobs.'
+      );
+    }
+
     if (!this.refreshQueue) {
       throw new Error('BullMQ queue is not available.');
     }
@@ -117,43 +141,69 @@ export class AnalyticsSchedulerService implements OnModuleInit {
     queueName: string;
     cronSchedule: string;
     isPaused: boolean;
+    workerEnabled: boolean;
     counts: {
       waiting: number;
       active: number;
       completed: number;
       failed: number;
       delayed: number;
-    };
+    } | null;
     repeatableJobs: any[];
+    message?: string;
   }> {
-    if (!this.refreshQueue) {
+    const workerEnabled = this.isWorkerEnabled();
+
+    if (!this.refreshQueue || !workerEnabled) {
       return {
         queueName: ANALYTICS_REFRESH_QUEUE,
         cronSchedule: this.cronSchedule,
         isPaused: true,
-        counts: { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0 },
+        workerEnabled,
+        counts: null,
         repeatableJobs: [],
+        message:
+          'Queue inspection skipped; background worker is disabled (ENABLE_ANALYTICS_WORKER=false).',
       };
     }
 
-    const [isPaused, counts, repeatableJobs] = await Promise.all([
-      this.refreshQueue.isPaused(),
-      this.refreshQueue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed'),
-      this.refreshQueue.getRepeatableJobs(),
-    ]);
+    try {
+      const [isPaused, counts, repeatableJobs] = await Promise.all([
+        this.refreshQueue.isPaused(),
+        this.refreshQueue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed'),
+        this.refreshQueue.getRepeatableJobs(),
+      ]);
 
-    return {
-      queueName: ANALYTICS_REFRESH_QUEUE,
-      cronSchedule: this.cronSchedule,
-      isPaused,
-      counts: {
-        waiting: counts.waiting || 0,
-        active: counts.active || 0,
-        completed: counts.completed || 0,
-        failed: counts.failed || 0,
-        delayed: counts.delayed || 0,
-      },
-      repeatableJobs,
-    };
+      return {
+        queueName: ANALYTICS_REFRESH_QUEUE,
+        cronSchedule: this.cronSchedule,
+        isPaused,
+        workerEnabled,
+        counts: {
+          waiting: counts.waiting || 0,
+          active: counts.active || 0,
+          completed: counts.completed || 0,
+          failed: counts.failed || 0,
+          delayed: counts.delayed || 0,
+        },
+        repeatableJobs,
+      };
+    } catch (err: any) {
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        `BullMQ QueueStatus (${ANALYTICS_REFRESH_QUEUE})`,
+        err,
+        'warn'
+      );
+      return {
+        queueName: ANALYTICS_REFRESH_QUEUE,
+        cronSchedule: this.cronSchedule,
+        isPaused: true,
+        workerEnabled,
+        counts: null,
+        repeatableJobs: [],
+        message: `Queue status unavailable: ${err.message}`,
+      };
+    }
   }
 }

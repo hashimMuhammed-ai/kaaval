@@ -60,7 +60,6 @@ export default function OwnerAnalyticsDashboardPage() {
   const [trends, setTrends] = useState<MonthlyTrendItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [clearingCache, setClearingCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<'6' | '12'>('6');
@@ -115,25 +114,6 @@ export default function OwnerAnalyticsDashboardPage() {
     }
   };
 
-  // Handle Clear Cache Action
-  const handleClearCache = async () => {
-    try {
-      setClearingCache(true);
-      setNotice(null);
-
-      const res = await apiFetch<{ success: boolean; message: string }>('/analytics/cache', {
-        method: 'POST',
-      });
-
-      setNotice(res.message || 'Redis analytics cache cleared.');
-      await fetchDashboardData();
-    } catch (err: any) {
-      setError(err?.message || 'Failed to clear analytics cache.');
-    } finally {
-      setClearingCache(false);
-    }
-  };
-
   // Currency Formatter (INR)
   const formatINR = (val: number | undefined) => {
     if (val === undefined || val === null || isNaN(val)) return '₹0';
@@ -166,7 +146,17 @@ export default function OwnerAnalyticsDashboardPage() {
   }, [trends]);
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1440px', margin: '0 auto', color: '#ffffff' }}>
+    <div
+      className="animate-fade-in"
+      style={{
+        width: '100%',
+        minWidth: 0,
+        maxWidth: '100%',
+        paddingBottom: '3rem',
+        color: '#0f172a',
+        boxSizing: 'border-box',
+      }}
+    >
       {/* Page Header */}
       <div
         style={{
@@ -185,21 +175,21 @@ export default function OwnerAnalyticsDashboardPage() {
                 fontSize: '0.75rem',
                 fontWeight: 700,
                 textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                padding: '0.2rem 0.6rem',
+                letterSpacing: '0.06em',
+                padding: '0.2rem 0.65rem',
                 borderRadius: 'var(--radius-full)',
-                backgroundColor: 'rgba(20, 184, 166, 0.15)',
-                color: '#2dd4bf',
-                border: '1px solid rgba(20, 184, 166, 0.3)',
+                backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                color: '#0f766e',
+                border: '1px solid rgba(13, 148, 136, 0.3)',
               }}
             >
-              Phase 11 — Analytics Intelligence
+              Executive Insights
             </span>
             <span
               style={{
                 fontSize: '0.75rem',
                 fontWeight: 600,
-                color: 'var(--text-muted)',
+                color: '#64748b',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.35rem',
@@ -211,10 +201,10 @@ export default function OwnerAnalyticsDashboardPage() {
                   height: '8px',
                   borderRadius: '50%',
                   backgroundColor: '#10b981',
-                  boxShadow: '0 0 8px #10b981',
+                  boxShadow: '0 0 6px #10b981',
                 }}
               />
-              Redis Cache Active (300s TTL)
+              Live Sync
             </span>
           </div>
 
@@ -223,16 +213,14 @@ export default function OwnerAnalyticsDashboardPage() {
               fontSize: '1.875rem',
               fontWeight: 800,
               letterSpacing: '-0.02em',
-              background: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              color: '#0f172a',
               marginBottom: '0.35rem',
             }}
           >
             Agency Performance & Owner Analytics
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-            Operational occupancy rates, time-to-fill speed, and monthly revenue trends backed by PostgreSQL materialized views.
+          <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>
+            Operational occupancy rates, time-to-fill speed, and monthly revenue trends.
           </p>
         </div>
 
@@ -242,24 +230,25 @@ export default function OwnerAnalyticsDashboardPage() {
           <div
             style={{
               display: 'flex',
-              backgroundColor: 'rgba(15, 23, 42, 0.8)',
+              backgroundColor: '#ffffff',
               borderRadius: 'var(--radius-md)',
               padding: '3px',
-              border: '1px solid var(--border-card)',
+              border: '1px solid #cbd5e1',
+              boxShadow: '0 1px 2px rgba(15, 23, 42, 0.05)',
             }}
           >
             <button
               id="timeframe-6m"
               onClick={() => setTimeframe('6')}
               style={{
-                padding: '0.4rem 0.75rem',
+                padding: '0.45rem 0.85rem',
                 fontSize: '0.8rem',
                 fontWeight: 600,
                 borderRadius: '6px',
                 border: 'none',
                 cursor: 'pointer',
                 backgroundColor: timeframe === '6' ? '#0d9488' : 'transparent',
-                color: timeframe === '6' ? '#ffffff' : 'var(--text-secondary)',
+                color: timeframe === '6' ? '#ffffff' : '#64748b',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -269,14 +258,14 @@ export default function OwnerAnalyticsDashboardPage() {
               id="timeframe-12m"
               onClick={() => setTimeframe('12')}
               style={{
-                padding: '0.4rem 0.75rem',
+                padding: '0.45rem 0.85rem',
                 fontSize: '0.8rem',
                 fontWeight: 600,
                 borderRadius: '6px',
                 border: 'none',
                 cursor: 'pointer',
                 backgroundColor: timeframe === '12' ? '#0d9488' : 'transparent',
-                color: timeframe === '12' ? '#ffffff' : 'var(--text-secondary)',
+                color: timeframe === '12' ? '#ffffff' : '#64748b',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -284,34 +273,7 @@ export default function OwnerAnalyticsDashboardPage() {
             </button>
           </div>
 
-          {/* Clear Cache Button */}
-          <button
-            id="btn-clear-cache"
-            onClick={handleClearCache}
-            disabled={clearingCache}
-            title="Clear Redis cache for this agency"
-            style={{
-              padding: '0.5rem 0.85rem',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.825rem',
-              fontWeight: 600,
-              backgroundColor: 'rgba(30, 41, 59, 0.7)',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border-card)',
-              cursor: clearingCache ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              transition: 'all 0.2s',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            <span>{clearingCache ? 'Clearing...' : 'Clear Cache'}</span>
-          </button>
-
-          {/* Refresh Materialized View Button */}
+          {/* Refresh Button */}
           <button
             id="btn-refresh-analytics"
             onClick={() => handleRefresh(false)}
@@ -321,11 +283,11 @@ export default function OwnerAnalyticsDashboardPage() {
               borderRadius: 'var(--radius-md)',
               fontSize: '0.85rem',
               fontWeight: 700,
-              background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+              background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
               color: '#ffffff',
               border: 'none',
               cursor: refreshing ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 14px rgba(20, 184, 166, 0.35)',
+              boxShadow: '0 3px 10px rgba(13, 148, 136, 0.25)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -346,7 +308,7 @@ export default function OwnerAnalyticsDashboardPage() {
             >
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67" />
             </svg>
-            <span>{refreshing ? 'Refreshing Views...' : 'Refresh Metrics'}</span>
+            <span>{refreshing ? 'Updating...' : 'Refresh Metrics'}</span>
           </button>
         </div>
       </div>
@@ -357,9 +319,9 @@ export default function OwnerAnalyticsDashboardPage() {
           style={{
             padding: '0.75rem 1.25rem',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(16, 185, 129, 0.35)',
-            color: '#34d399',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            color: '#065f46',
             fontSize: '0.875rem',
             marginBottom: '1.5rem',
             display: 'flex',
@@ -370,7 +332,7 @@ export default function OwnerAnalyticsDashboardPage() {
           <span>✓ {notice}</span>
           <button
             onClick={() => setNotice(null)}
-            style={{ background: 'none', border: 'none', color: '#34d399', cursor: 'pointer', fontSize: '1rem' }}
+            style={{ background: 'none', border: 'none', color: '#065f46', cursor: 'pointer', fontSize: '1rem' }}
           >
             ✕
           </button>
@@ -382,9 +344,9 @@ export default function OwnerAnalyticsDashboardPage() {
           style={{
             padding: '0.75rem 1.25rem',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.35)',
-            color: '#f87171',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#b91c1c',
             fontSize: '0.875rem',
             marginBottom: '1.5rem',
           }}
@@ -397,21 +359,21 @@ export default function OwnerAnalyticsDashboardPage() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))',
           gap: '1.25rem',
           marginBottom: '2rem',
+          width: '100%',
         }}
       >
         {/* Metric 1: Occupancy Rate */}
         <div
           id="kpi-occupancy-rate"
+          className="analytics-card"
           style={{
-            backgroundColor: 'rgba(19, 26, 43, 0.85)',
-            backdropFilter: 'blur(16px)',
+            backgroundColor: '#ffffff',
             borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-card)',
-            padding: '1.5rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -423,12 +385,12 @@ export default function OwnerAnalyticsDashboardPage() {
               right: 0,
               width: '120px',
               height: '120px',
-              background: 'radial-gradient(circle, rgba(20, 184, 166, 0.18) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(13, 148, 136, 0.08) 0%, transparent 70%)',
               pointerEvents: 'none',
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: '#475569' }}>
               Workforce Occupancy Rate
             </span>
             <span
@@ -437,8 +399,8 @@ export default function OwnerAnalyticsDashboardPage() {
                 fontWeight: 700,
                 padding: '0.15rem 0.5rem',
                 borderRadius: 'var(--radius-full)',
-                backgroundColor: 'rgba(20, 184, 166, 0.2)',
-                color: '#2dd4bf',
+                backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                color: '#0f766e',
               }}
             >
               Live Utilization
@@ -446,10 +408,10 @@ export default function OwnerAnalyticsDashboardPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
+            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
               {overview ? `${overview.occupancyRatePct}%` : '0%'}
             </span>
-            <span style={{ fontSize: '0.85rem', color: '#2dd4bf', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.85rem', color: '#0d9488', fontWeight: 600 }}>
               {overview ? `${overview.assignedCaregivers} / ${overview.totalCaregivers}` : '0 / 0'} deployed
             </span>
           </div>
@@ -459,7 +421,7 @@ export default function OwnerAnalyticsDashboardPage() {
             style={{
               width: '100%',
               height: '6px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              backgroundColor: '#f1f5f9',
               borderRadius: '999px',
               overflow: 'hidden',
               marginBottom: '0.85rem',
@@ -469,7 +431,7 @@ export default function OwnerAnalyticsDashboardPage() {
               style={{
                 height: '100%',
                 width: `${Math.min(overview?.occupancyRatePct || 0, 100)}%`,
-                background: 'linear-gradient(90deg, #0d9488, #2dd4bf)',
+                background: 'linear-gradient(90deg, #0d9488, #14b8a6)',
                 borderRadius: '999px',
                 transition: 'width 0.8s ease',
               }}
@@ -481,25 +443,24 @@ export default function OwnerAnalyticsDashboardPage() {
               display: 'flex',
               justifyContent: 'space-between',
               fontSize: '0.75rem',
-              color: 'var(--text-secondary)',
+              color: '#64748b',
             }}
           >
-            <span>Available: <b style={{ color: '#ffffff' }}>{overview?.availableCaregivers ?? 0}</b></span>
-            <span>On Leave: <b style={{ color: '#ffffff' }}>{overview?.onLeaveCaregivers ?? 0}</b></span>
-            <span>Inactive: <b style={{ color: 'var(--text-muted)' }}>{overview?.inactiveCaregivers ?? 0}</b></span>
+            <span>Available: <b style={{ color: '#0f172a' }}>{overview?.availableCaregivers ?? 0}</b></span>
+            <span>On Leave: <b style={{ color: '#0f172a' }}>{overview?.onLeaveCaregivers ?? 0}</b></span>
+            <span>Inactive: <b style={{ color: '#94a3b8' }}>{overview?.inactiveCaregivers ?? 0}</b></span>
           </div>
         </div>
 
         {/* Metric 2: Average Time-to-Fill */}
         <div
           id="kpi-time-to-fill"
+          className="analytics-card"
           style={{
-            backgroundColor: 'rgba(19, 26, 43, 0.85)',
-            backdropFilter: 'blur(16px)',
+            backgroundColor: '#ffffff',
             borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-card)',
-            padding: '1.5rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -511,12 +472,12 @@ export default function OwnerAnalyticsDashboardPage() {
               right: 0,
               width: '120px',
               height: '120px',
-              background: 'radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(2, 132, 199, 0.08) 0%, transparent 70%)',
               pointerEvents: 'none',
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: '#475569' }}>
               Avg Time-to-Fill (TAT)
             </span>
             <span
@@ -525,8 +486,8 @@ export default function OwnerAnalyticsDashboardPage() {
                 fontWeight: 700,
                 padding: '0.15rem 0.5rem',
                 borderRadius: 'var(--radius-full)',
-                backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                color: '#60a5fa',
+                backgroundColor: 'rgba(2, 132, 199, 0.12)',
+                color: '#0284c7',
               }}
             >
               Intake to Assigned
@@ -534,10 +495,10 @@ export default function OwnerAnalyticsDashboardPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
+            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
               {overview ? `${overview.avgTimeToFillHours}h` : '0h'}
             </span>
-            <span style={{ fontSize: '0.85rem', color: '#93c5fd', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.85rem', color: '#0284c7', fontWeight: 600 }}>
               {overview ? `(${overview.avgTimeToFillDays} days)` : ''}
             </span>
           </div>
@@ -547,7 +508,7 @@ export default function OwnerAnalyticsDashboardPage() {
             style={{
               width: '100%',
               height: '6px',
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              backgroundColor: '#f1f5f9',
               borderRadius: '999px',
               overflow: 'hidden',
               marginBottom: '0.85rem',
@@ -557,7 +518,7 @@ export default function OwnerAnalyticsDashboardPage() {
               style={{
                 height: '100%',
                 width: `${Math.min(overview?.fillRatePct || 0, 100)}%`,
-                background: 'linear-gradient(90deg, #2563eb, #60a5fa)',
+                background: 'linear-gradient(90deg, #0284c7, #38bdf8)',
                 borderRadius: '999px',
                 transition: 'width 0.8s ease',
               }}
@@ -569,25 +530,24 @@ export default function OwnerAnalyticsDashboardPage() {
               display: 'flex',
               justifyContent: 'space-between',
               fontSize: '0.75rem',
-              color: 'var(--text-secondary)',
+              color: '#64748b',
             }}
           >
-            <span>Filled: <b style={{ color: '#ffffff' }}>{overview?.filledRequests ?? 0}</b></span>
-            <span>Pending: <b style={{ color: '#f59e0b' }}>{overview?.pendingRequests ?? 0}</b></span>
-            <span>Fill Rate: <b style={{ color: '#60a5fa' }}>{overview?.fillRatePct ?? 0}%</b></span>
+            <span>Filled: <b style={{ color: '#0f172a' }}>{overview?.filledRequests ?? 0}</b></span>
+            <span>Pending: <b style={{ color: '#d97706' }}>{overview?.pendingRequests ?? 0}</b></span>
+            <span>Fill Rate: <b style={{ color: '#0284c7' }}>{overview?.fillRatePct ?? 0}%</b></span>
           </div>
         </div>
 
         {/* Metric 3: Current Month Gross Revenue */}
         <div
           id="kpi-gross-revenue"
+          className="analytics-card"
           style={{
-            backgroundColor: 'rgba(19, 26, 43, 0.85)',
-            backdropFilter: 'blur(16px)',
+            backgroundColor: '#ffffff',
             borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-card)',
-            padding: '1.5rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -599,12 +559,12 @@ export default function OwnerAnalyticsDashboardPage() {
               right: 0,
               width: '120px',
               height: '120px',
-              background: 'radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
               pointerEvents: 'none',
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: '#475569' }}>
               Current Month Billing
             </span>
             <span
@@ -613,8 +573,8 @@ export default function OwnerAnalyticsDashboardPage() {
                 fontWeight: 700,
                 padding: '0.15rem 0.5rem',
                 borderRadius: 'var(--radius-full)',
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                color: '#34d399',
+                backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                color: '#059669',
               }}
             >
               Gross Customer Volume
@@ -622,7 +582,7 @@ export default function OwnerAnalyticsDashboardPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
+            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
               {formatINR(overview?.currentMonthGrossRevenue)}
             </span>
           </div>
@@ -633,13 +593,13 @@ export default function OwnerAnalyticsDashboardPage() {
               alignItems: 'center',
               gap: '0.4rem',
               fontSize: '0.8rem',
-              color: '#34d399',
+              color: '#059669',
               fontWeight: 600,
               marginBottom: '0.85rem',
             }}
           >
             <span>↑ {overview?.revenueGrowthMomPct ?? 0}%</span>
-            <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>vs previous month</span>
+            <span style={{ color: '#64748b', fontWeight: 400 }}>vs previous month</span>
           </div>
 
           <div
@@ -647,23 +607,22 @@ export default function OwnerAnalyticsDashboardPage() {
               display: 'flex',
               justifyContent: 'space-between',
               fontSize: '0.75rem',
-              color: 'var(--text-secondary)',
+              color: '#64748b',
             }}
           >
-            <span>All-Time Gross: <b style={{ color: '#ffffff' }}>{formatINR(overview?.allTimeGrossRevenue)}</b></span>
+            <span>All-Time Gross: <b style={{ color: '#0f172a' }}>{formatINR(overview?.allTimeGrossRevenue)}</b></span>
           </div>
         </div>
 
         {/* Metric 4: Agency Net Commission */}
         <div
           id="kpi-commission-revenue"
+          className="analytics-card"
           style={{
-            backgroundColor: 'rgba(19, 26, 43, 0.85)',
-            backdropFilter: 'blur(16px)',
+            backgroundColor: '#ffffff',
             borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-card)',
-            padding: '1.5rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -675,12 +634,12 @@ export default function OwnerAnalyticsDashboardPage() {
               right: 0,
               width: '120px',
               height: '120px',
-              background: 'radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(147, 51, 234, 0.08) 0%, transparent 70%)',
               pointerEvents: 'none',
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.825rem', fontWeight: 600, color: '#475569' }}>
               Agency Commission (Net)
             </span>
             <span
@@ -689,8 +648,8 @@ export default function OwnerAnalyticsDashboardPage() {
                 fontWeight: 700,
                 padding: '0.15rem 0.5rem',
                 borderRadius: 'var(--radius-full)',
-                backgroundColor: 'rgba(168, 85, 247, 0.2)',
-                color: '#c084fc',
+                backgroundColor: 'rgba(147, 51, 234, 0.12)',
+                color: '#7e22ce',
               }}
             >
               Agency Take
@@ -698,7 +657,7 @@ export default function OwnerAnalyticsDashboardPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
+            <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
               {formatINR(overview?.currentMonthCommissionRevenue)}
             </span>
           </div>
@@ -706,11 +665,11 @@ export default function OwnerAnalyticsDashboardPage() {
           <div
             style={{
               fontSize: '0.8rem',
-              color: 'var(--text-secondary)',
+              color: '#64748b',
               marginBottom: '0.85rem',
             }}
           >
-            Caregiver Payout: <b style={{ color: '#ffffff' }}>{formatINR(overview?.currentMonthNetPayout)}</b>
+            Caregiver Payout: <b style={{ color: '#0f172a' }}>{formatINR(overview?.currentMonthNetPayout)}</b>
           </div>
 
           <div
@@ -718,22 +677,24 @@ export default function OwnerAnalyticsDashboardPage() {
               display: 'flex',
               justifyContent: 'space-between',
               fontSize: '0.75rem',
-              color: 'var(--text-secondary)',
+              color: '#64748b',
             }}
           >
-            <span>All-Time Commission: <b style={{ color: '#c084fc' }}>{formatINR(overview?.allTimeCommissionRevenue)}</b></span>
+            <span>All-Time Commission: <b style={{ color: '#7e22ce' }}>{formatINR(overview?.allTimeCommissionRevenue)}</b></span>
           </div>
         </div>
       </div>
 
       {/* Chart View Switcher Tabs */}
       <div
+        className="mobile-scroll-x"
         style={{
           display: 'flex',
           gap: '0.75rem',
-          borderBottom: '1px solid var(--border-card)',
+          borderBottom: '1px solid #e2e8f0',
           paddingBottom: '0.75rem',
           marginBottom: '1.75rem',
+          width: '100%',
         }}
       >
         {[
@@ -751,11 +712,12 @@ export default function OwnerAnalyticsDashboardPage() {
               borderRadius: 'var(--radius-md)',
               fontSize: '0.85rem',
               fontWeight: activeTab === tab.id ? 700 : 500,
-              backgroundColor: activeTab === tab.id ? 'rgba(20, 184, 166, 0.18)' : 'transparent',
-              color: activeTab === tab.id ? '#2dd4bf' : 'var(--text-secondary)',
-              border: activeTab === tab.id ? '1px solid rgba(20, 184, 166, 0.35)' : '1px solid transparent',
+              backgroundColor: activeTab === tab.id ? 'rgba(13, 148, 136, 0.12)' : 'transparent',
+              color: activeTab === tab.id ? '#0f766e' : '#64748b',
+              border: activeTab === tab.id ? '1px solid rgba(13, 148, 136, 0.35)' : '1px solid transparent',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
+              whiteSpace: 'nowrap',
             }}
           >
             {tab.label}
@@ -769,13 +731,13 @@ export default function OwnerAnalyticsDashboardPage() {
         {(activeTab === 'all' || activeTab === 'revenue') && (
           <div
             id="chart-revenue-trend"
+            className="analytics-card"
             style={{
-              backgroundColor: 'rgba(19, 26, 43, 0.85)',
-              backdropFilter: 'blur(16px)',
+              backgroundColor: '#ffffff',
               borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-card)',
-              padding: '1.75rem',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
+              width: '100%',
             }}
           >
             <div
@@ -789,26 +751,26 @@ export default function OwnerAnalyticsDashboardPage() {
               }}
             >
               <div>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#ffffff' }}>
+                <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#0f172a' }}>
                   Monthly Revenue Trend (Customer Billing vs Agency Commission)
                 </h2>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', margin: 0 }}>
+                <p style={{ fontSize: '0.825rem', color: '#64748b', margin: 0 }}>
                   Gross volume charged to clients alongside net agency commission split.
                 </p>
               </div>
 
               {/* Chart Legend */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', fontSize: '0.8rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#2dd4bf' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#14b8a6' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0f766e', fontWeight: 600 }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#0d9488' }} />
                   Gross Billing
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#a855f7' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#a855f7' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#7e22ce', fontWeight: 600 }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#9333ea' }} />
                   Agency Commission
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#94a3b8' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#475569' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontWeight: 600 }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#cbd5e1' }} />
                   Caregiver Payout
                 </span>
               </div>
@@ -817,7 +779,7 @@ export default function OwnerAnalyticsDashboardPage() {
             {/* SVG Multi-Series Bar Chart */}
             <div style={{ position: 'relative', width: '100%', height: '280px' }}>
               {trends.length === 0 ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
                   No revenue history available for this timeframe.
                 </div>
               ) : (
@@ -827,11 +789,11 @@ export default function OwnerAnalyticsDashboardPage() {
                 >
                   <defs>
                     <linearGradient id="grossBarGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#2dd4bf" />
-                      <stop offset="100%" stopColor="#0f766e" />
+                      <stop offset="0%" stopColor="#14b8a6" />
+                      <stop offset="100%" stopColor="#0d9488" />
                     </linearGradient>
                     <linearGradient id="commBarGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#c084fc" />
+                      <stop offset="0%" stopColor="#a855f7" />
                       <stop offset="100%" stopColor="#7e22ce" />
                     </linearGradient>
                   </defs>
@@ -844,18 +806,17 @@ export default function OwnerAnalyticsDashboardPage() {
                       y1={200 - pct * 180}
                       x2={trends.length * 120}
                       y2={200 - pct * 180}
-                      stroke="rgba(255, 255, 255, 0.06)"
+                      stroke="#f1f5f9"
                       strokeDasharray="4 4"
                     />
                   ))}
 
-                  {/* Bars per month */}
+                  {/* Bars & Labels */}
                   {trends.map((t, idx) => {
                     const x = idx * 120 + 20;
                     const grossHeight = Math.min((t.grossRevenue / maxRevenue) * 180, 180);
                     const commHeight = Math.min((t.commissionRevenue / maxRevenue) * 180, 180);
                     const payoutHeight = Math.min((t.caregiverPayouts / maxRevenue) * 180, 180);
-
                     const isHovered = hoveredMonth === t.periodMonth;
 
                     return (
@@ -865,14 +826,14 @@ export default function OwnerAnalyticsDashboardPage() {
                         onMouseLeave={() => setHoveredMonth(null)}
                         style={{ cursor: 'pointer' }}
                       >
-                        {/* Background highlight on hover */}
+                        {/* Hover column backdrop */}
                         {isHovered && (
                           <rect
                             x={x - 10}
                             y="10"
                             width="90"
                             height="195"
-                            fill="rgba(255, 255, 255, 0.04)"
+                            fill="rgba(15, 23, 42, 0.03)"
                             rx="8"
                           />
                         )}
@@ -905,7 +866,7 @@ export default function OwnerAnalyticsDashboardPage() {
                           y={200 - payoutHeight}
                           width="20"
                           height={payoutHeight}
-                          fill="#475569"
+                          fill="#cbd5e1"
                           rx="4"
                           style={{ transition: 'all 0.3s ease' }}
                         />
@@ -915,7 +876,7 @@ export default function OwnerAnalyticsDashboardPage() {
                           x={x + 34}
                           y="225"
                           textAnchor="middle"
-                          fill={isHovered ? '#ffffff' : 'var(--text-secondary)'}
+                          fill={isHovered ? '#0f172a' : '#64748b'}
                           fontSize="11"
                           fontWeight={isHovered ? '700' : '500'}
                         >
@@ -931,8 +892,8 @@ export default function OwnerAnalyticsDashboardPage() {
                               width="130"
                               height="44"
                               rx="6"
-                              fill="#0b1120"
-                              stroke="rgba(45, 212, 191, 0.4)"
+                              fill="#0f172a"
+                              stroke="rgba(13, 148, 136, 0.6)"
                             />
                             <text
                               x={x + 35}
@@ -969,13 +930,13 @@ export default function OwnerAnalyticsDashboardPage() {
         {(activeTab === 'all' || activeTab === 'occupancy') && (
           <div
             id="chart-occupancy-trend"
+            className="analytics-card"
             style={{
-              backgroundColor: 'rgba(19, 26, 43, 0.85)',
-              backdropFilter: 'blur(16px)',
+              backgroundColor: '#ffffff',
               borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-card)',
-              padding: '1.75rem',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
+              width: '100%',
             }}
           >
             <div
@@ -989,27 +950,27 @@ export default function OwnerAnalyticsDashboardPage() {
               }}
             >
               <div>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#ffffff' }}>
+                <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#0f172a' }}>
                   Caregiver Occupancy & Utilization Trend
                 </h2>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', margin: 0 }}>
+                <p style={{ fontSize: '0.825rem', color: '#64748b', margin: 0 }}>
                   Proportion of active, working caregivers deployed on assignments per month.
                 </p>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#38bdf8' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0284c7', fontWeight: 600 }}>
                   <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#0284c7' }} />
                   Occupancy %
                 </span>
-                <span style={{ color: 'var(--text-muted)' }}>Target: 75% +</span>
+                <span style={{ color: '#64748b' }}>Target: 75% +</span>
               </div>
             </div>
 
             {/* SVG Line / Area Chart for Occupancy */}
             <div style={{ position: 'relative', width: '100%', height: '240px' }}>
               {trends.length === 0 ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
                   No occupancy trend records available.
                 </div>
               ) : (
@@ -1019,8 +980,8 @@ export default function OwnerAnalyticsDashboardPage() {
                 >
                   <defs>
                     <linearGradient id="occupancyAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(56, 189, 248, 0.35)" />
-                      <stop offset="100%" stopColor="rgba(56, 189, 248, 0.0)" />
+                      <stop offset="0%" stopColor="rgba(2, 132, 199, 0.2)" />
+                      <stop offset="100%" stopColor="rgba(2, 132, 199, 0.0)" />
                     </linearGradient>
                   </defs>
 
@@ -1030,13 +991,13 @@ export default function OwnerAnalyticsDashboardPage() {
                     y1={170 - 0.75 * 140}
                     x2={trends.length * 120}
                     y2={170 - 0.75 * 140}
-                    stroke="rgba(20, 184, 166, 0.4)"
+                    stroke="rgba(13, 148, 136, 0.35)"
                     strokeDasharray="6 4"
                   />
                   <text
                     x={trends.length * 120 - 60}
                     y={165 - 0.75 * 140}
-                    fill="#2dd4bf"
+                    fill="#0f766e"
                     fontSize="9"
                     fontWeight="700"
                   >
@@ -1061,7 +1022,7 @@ export default function OwnerAnalyticsDashboardPage() {
                   {/* Polyline Path */}
                   <polyline
                     fill="none"
-                    stroke="#38bdf8"
+                    stroke="#0284c7"
                     strokeWidth="3.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1091,7 +1052,7 @@ export default function OwnerAnalyticsDashboardPage() {
                           x={cx}
                           y={cy - 12}
                           textAnchor="middle"
-                          fill="#38bdf8"
+                          fill="#0284c7"
                           fontSize="11"
                           fontWeight="700"
                         >
@@ -1101,7 +1062,7 @@ export default function OwnerAnalyticsDashboardPage() {
                           x={cx}
                           y="190"
                           textAnchor="middle"
-                          fill={isHovered ? '#ffffff' : 'var(--text-secondary)'}
+                          fill={isHovered ? '#0f172a' : '#64748b'}
                           fontSize="10"
                         >
                           {formatMonthLabel(t.periodMonth)}
@@ -1119,13 +1080,13 @@ export default function OwnerAnalyticsDashboardPage() {
         {(activeTab === 'all' || activeTab === 'fill-time') && (
           <div
             id="chart-time-to-fill-trend"
+            className="analytics-card"
             style={{
-              backgroundColor: 'rgba(19, 26, 43, 0.85)',
-              backdropFilter: 'blur(16px)',
+              backgroundColor: '#ffffff',
               borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-card)',
-              padding: '1.75rem',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
+              width: '100%',
             }}
           >
             <div
@@ -1139,20 +1100,20 @@ export default function OwnerAnalyticsDashboardPage() {
               }}
             >
               <div>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#ffffff' }}>
+                <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: '#0f172a' }}>
                   Average Time-to-Fill (TAT) & Fulfillment Pipeline
                 </h2>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', margin: 0 }}>
+                <p style={{ fontSize: '0.825rem', color: '#64748b', margin: 0 }}>
                   Turnaround hours from customer intake to confirmed caregiver placement.
                 </p>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#fbbf24' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#d97706', fontWeight: 600 }}>
                   <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
                   Avg TAT (Hours)
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#34d399' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#059669', fontWeight: 600 }}>
                   <span style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: '#10b981' }} />
                   Filled Leads
                 </span>
@@ -1162,7 +1123,7 @@ export default function OwnerAnalyticsDashboardPage() {
             {/* SVG Time-to-Fill Visual */}
             <div style={{ position: 'relative', width: '100%', height: '240px' }}>
               {trends.length === 0 ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
                   No time-to-fill trend records available.
                 </div>
               ) : (
@@ -1185,7 +1146,7 @@ export default function OwnerAnalyticsDashboardPage() {
                           y={160 - barHeight}
                           width="30"
                           height={barHeight}
-                          fill="rgba(16, 185, 129, 0.4)"
+                          fill="rgba(16, 185, 129, 0.25)"
                           stroke="#10b981"
                           strokeWidth="1.5"
                           rx="4"
@@ -1194,9 +1155,9 @@ export default function OwnerAnalyticsDashboardPage() {
                           x={x + 15}
                           y={155 - barHeight}
                           textAnchor="middle"
-                          fill="#34d399"
+                          fill="#059669"
                           fontSize="9"
-                          fontWeight="600"
+                          fontWeight="700"
                         >
                           {t.filledRequests}
                         </text>
@@ -1206,7 +1167,7 @@ export default function OwnerAnalyticsDashboardPage() {
                           x={x + 15}
                           y="185"
                           textAnchor="middle"
-                          fill={isHovered ? '#ffffff' : 'var(--text-secondary)'}
+                          fill={isHovered ? '#0f172a' : '#64748b'}
                           fontSize="10"
                         >
                           {formatMonthLabel(t.periodMonth)}
@@ -1225,7 +1186,7 @@ export default function OwnerAnalyticsDashboardPage() {
                           x={x + 15}
                           y={tatY - 8}
                           textAnchor="middle"
-                          fill="#fbbf24"
+                          fill="#d97706"
                           fontSize="10"
                           fontWeight="700"
                         >
@@ -1244,28 +1205,28 @@ export default function OwnerAnalyticsDashboardPage() {
       {/* MONTHLY LEDGER BREAKDOWN TABLE */}
       <div
         style={{
-          backgroundColor: 'rgba(19, 26, 43, 0.85)',
-          backdropFilter: 'blur(16px)',
+          backgroundColor: '#ffffff',
           borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-card)',
+          border: '1px solid #e2e8f0',
           overflow: 'hidden',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+          boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.06)',
+          width: '100%',
         }}
       >
         <div
           style={{
             padding: '1.25rem 1.75rem',
-            borderBottom: '1px solid var(--border-card)',
+            borderBottom: '1px solid #e2e8f0',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}
         >
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: '#ffffff' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>
               Historical Performance Ledger
             </h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
+            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
               Tabulated financial, operational, and fulfillment records per billing cycle.
             </p>
           </div>
@@ -1274,7 +1235,7 @@ export default function OwnerAnalyticsDashboardPage() {
             style={{
               fontSize: '0.8rem',
               fontWeight: 600,
-              color: '#2dd4bf',
+              color: '#0d9488',
               textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
@@ -1288,21 +1249,21 @@ export default function OwnerAnalyticsDashboardPage() {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
             <thead>
-              <tr style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', borderBottom: '1px solid var(--border-card)' }}>
-                <th style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Month</th>
-                <th style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Gross Billing</th>
-                <th style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Agency Commission</th>
-                <th style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Caregiver Payout</th>
-                <th style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Days Worked</th>
-                <th style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Occupancy</th>
-                <th style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Avg TAT</th>
-                <th style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Fill Rate</th>
+              <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                <th style={{ padding: '0.85rem 1.25rem', color: '#475569', fontWeight: 600 }}>Month</th>
+                <th style={{ padding: '0.85rem 1.25rem', color: '#475569', fontWeight: 600 }}>Gross Billing</th>
+                <th style={{ padding: '0.85rem 1.25rem', color: '#475569', fontWeight: 600 }}>Agency Commission</th>
+                <th style={{ padding: '0.85rem 1.25rem', color: '#475569', fontWeight: 600 }}>Caregiver Payout</th>
+                <th style={{ padding: '0.85rem 1.25rem', color: '#475569', fontWeight: 600 }}>Days Worked</th>
+                <th style={{ padding: '0.85rem 1.25rem', color: '#475569', fontWeight: 600 }}>Occupancy</th>
+                <th style={{ padding: '0.85rem 1.25rem', color: '#475569', fontWeight: 600 }}>Avg TAT</th>
+                <th style={{ padding: '0.85rem 1.25rem', color: '#475569', fontWeight: 600 }}>Fill Rate</th>
               </tr>
             </thead>
             <tbody>
               {trends.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                     No historical data available.
                   </td>
                 </tr>
@@ -1311,26 +1272,26 @@ export default function OwnerAnalyticsDashboardPage() {
                   <tr
                     key={t.periodMonth}
                     style={{
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                      borderBottom: '1px solid #f1f5f9',
                       transition: 'background-color 0.15s',
                     }}
                   >
-                    <td style={{ padding: '0.85rem 1.25rem', fontWeight: 700, color: '#ffffff' }}>
+                    <td style={{ padding: '0.85rem 1.25rem', fontWeight: 700, color: '#0f172a' }}>
                       {formatMonthLabel(t.periodMonth)}
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginLeft: '0.4rem' }}>
                         ({t.periodMonth})
                       </span>
                     </td>
-                    <td style={{ padding: '0.85rem 1.25rem', color: '#2dd4bf', fontWeight: 600 }}>
+                    <td style={{ padding: '0.85rem 1.25rem', color: '#0d9488', fontWeight: 600 }}>
                       {formatINR(t.grossRevenue)}
                     </td>
-                    <td style={{ padding: '0.85rem 1.25rem', color: '#c084fc', fontWeight: 700 }}>
+                    <td style={{ padding: '0.85rem 1.25rem', color: '#7e22ce', fontWeight: 700 }}>
                       {formatINR(t.commissionRevenue)}
                     </td>
-                    <td style={{ padding: '0.85rem 1.25rem', color: '#cbd5e1' }}>
+                    <td style={{ padding: '0.85rem 1.25rem', color: '#475569' }}>
                       {formatINR(t.caregiverPayouts)}
                     </td>
-                    <td style={{ padding: '0.85rem 1.25rem', color: 'var(--text-secondary)' }}>
+                    <td style={{ padding: '0.85rem 1.25rem', color: '#64748b' }}>
                       {t.totalDaysWorked} days
                     </td>
                     <td style={{ padding: '0.85rem 1.25rem' }}>
@@ -1341,17 +1302,17 @@ export default function OwnerAnalyticsDashboardPage() {
                           fontSize: '0.75rem',
                           fontWeight: 700,
                           backgroundColor:
-                            t.occupancyRatePct >= 75 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                          color: t.occupancyRatePct >= 75 ? '#34d399' : '#fbbf24',
+                            t.occupancyRatePct >= 75 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                          color: t.occupancyRatePct >= 75 ? '#065f46' : '#92400e',
                         }}
                       >
                         {t.occupancyRatePct}%
                       </span>
                     </td>
-                    <td style={{ padding: '0.85rem 1.25rem', color: '#fbbf24', fontWeight: 600 }}>
+                    <td style={{ padding: '0.85rem 1.25rem', color: '#d97706', fontWeight: 600 }}>
                       {t.avgTimeToFillHours}h
                     </td>
-                    <td style={{ padding: '0.85rem 1.25rem', color: '#60a5fa', fontWeight: 600 }}>
+                    <td style={{ padding: '0.85rem 1.25rem', color: '#0284c7', fontWeight: 600 }}>
                       {t.fillRatePct}%
                     </td>
                   </tr>

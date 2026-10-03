@@ -1,16 +1,30 @@
 import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env files
+dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 export async function runMigrations() {
-  const pool = new Pool({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    user: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
-    database: process.env.DB_NAME || 'caregiver_db',
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-  });
+  const dbUrl = process.env.DATABASE_URL || process.env.DB_URL;
+  const pool = new Pool(
+    dbUrl
+      ? {
+          connectionString: dbUrl,
+          ssl: { rejectUnauthorized: false },
+        }
+      : {
+          host: process.env.DB_HOST || 'localhost',
+          port: parseInt(process.env.DB_PORT || '5432', 10),
+          user: process.env.DB_USERNAME || 'postgres',
+          password: process.env.DB_PASSWORD || 'postgres',
+          database: process.env.DB_NAME || 'caregiver_db',
+          ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+        }
+  );
 
   const client = await pool.connect();
   try {

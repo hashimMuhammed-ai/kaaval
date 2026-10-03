@@ -6,6 +6,7 @@ import {
   ANALYTICS_REFRESH_QUEUE,
   ANALYTICS_REFRESH_JOB,
 } from '../constants/analytics.constants';
+import { RedisQuotaErrorThrottler } from '../../common/utils/redis-connection.helper';
 
 @Processor(ANALYTICS_REFRESH_QUEUE)
 export class AnalyticsRefreshProcessor extends WorkerHost {
@@ -40,10 +41,19 @@ export class AnalyticsRefreshProcessor extends WorkerHost {
         durationMs,
       };
     } catch (error: any) {
-      this.logger.error(
-        `[BullMQ] Error refreshing materialized views for job ${job.id}: ${error.message}`,
-        error.stack
-      );
+      if (RedisQuotaErrorThrottler.isQuotaError(error)) {
+        RedisQuotaErrorThrottler.logThrottled(
+          this.logger,
+          `BullMQ Job ${job.id}`,
+          error,
+          'error'
+        );
+      } else {
+        this.logger.error(
+          `[BullMQ] Error refreshing materialized views for job ${job.id}: ${error.message}`,
+          error.stack
+        );
+      }
       throw error;
     }
   }
@@ -57,8 +67,27 @@ export class AnalyticsRefreshProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   onFailed(job: Job, error: Error) {
-    this.logger.error(
-      `[BullMQ] Job ${job?.id} failed with error: ${error.message}`
+    if (RedisQuotaErrorThrottler.isQuotaError(error)) {
+      RedisQuotaErrorThrottler.logThrottled(
+        this.logger,
+        `BullMQ Job ${job?.id}`,
+        error,
+        'error'
+      );
+    } else {
+      this.logger.error(
+        `[BullMQ] Job ${job?.id} failed with error: ${error.message}`
+      );
+    }
+  }
+
+  @OnWorkerEvent('error')
+  onError(error: Error) {
+    RedisQuotaErrorThrottler.logThrottled(
+      this.logger,
+      'BullMQ Worker',
+      error,
+      'error'
     );
   }
 }

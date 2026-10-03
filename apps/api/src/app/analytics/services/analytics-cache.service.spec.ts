@@ -164,4 +164,47 @@ describe('AnalyticsCacheService', () => {
       expect(mockRedis.del).toHaveBeenCalledWith(...allKeys);
     });
   });
+
+  describe('local development guard & quota throttling', () => {
+    it('should block remote Redis in development and keep caching safely disabled', async () => {
+      const devConfigService = {
+        get: jest.fn().mockImplementation((key: string, defaultVal?: any) => {
+          if (key === 'NODE_ENV') return 'development';
+          if (key === 'REDIS_URL')
+            return 'rediss://default:pwd@careful-terrapin.upstash.io:6379';
+          if (key === 'ALLOW_REMOTE_REDIS_IN_DEV') return 'false';
+          return defaultVal;
+        }),
+      } as unknown as ConfigService;
+
+      const uninitializedService = new AnalyticsCacheService(devConfigService);
+      await uninitializedService.onModuleInit();
+
+      expect(uninitializedService.isAvailable()).toBe(false);
+    });
+
+    it('should throttle quota exceeded error logs when get encounters quota limit', async () => {
+      mockRedis.get = jest
+        .fn()
+        .mockRejectedValue(
+          new Error('ERR max requests limit exceeded. Limit: 500000, Usage: 500004')
+        );
+
+      const result1 = await service.get('test-key-1');
+      const result2 = await service.get('test-key-2');
+
+      expect(result1).toBeNull();
+      expect(result2).toBeNull();
+    });
+
+    it('should throttle quota exceeded error logs when set encounters quota limit', async () => {
+      mockRedis.set = jest
+        .fn()
+        .mockRejectedValue(
+          new Error('ERR max requests limit exceeded. Limit: 500000, Usage: 500004')
+        );
+
+      await expect(service.set('test-key', { a: 1 })).resolves.not.toThrow();
+    });
+  });
 });

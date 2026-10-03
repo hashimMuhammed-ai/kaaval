@@ -75,7 +75,7 @@ describe('DashboardCustomersPage (Customer CRM Roster)', () => {
     render(<DashboardCustomersPage />);
 
     expect(
-      screen.getByRole('heading', { name: /Customer Accounts & CRM Roster/i })
+      screen.getByRole('heading', { name: /Customer Accounts & CRM/i })
     ).toBeTruthy();
     expect(screen.getByRole('button', { name: /\+ Onboard New Customer/i })).toBeTruthy();
 
@@ -83,8 +83,8 @@ describe('DashboardCustomersPage (Customer CRM Roster)', () => {
       expect(screen.getByText('Total Client Accounts')).toBeTruthy();
       expect(screen.getByText(/Active In-Home Care/i)).toBeTruthy();
       expect(screen.getAllByText(/Pending Assignment/i).length).toBeGreaterThan(0);
-      expect(screen.getByText('Devaki Amma')).toBeTruthy();
-      expect(screen.getByText('George Joseph')).toBeTruthy();
+      expect(screen.getAllByText('Devaki Amma').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('George Joseph').length).toBeGreaterThan(0);
     });
   });
 
@@ -92,8 +92,8 @@ describe('DashboardCustomersPage (Customer CRM Roster)', () => {
     render(<DashboardCustomersPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Devaki Amma')).toBeTruthy();
-      expect(screen.getByText('George Joseph')).toBeTruthy();
+      expect(screen.getAllByText('Devaki Amma').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('George Joseph').length).toBeGreaterThan(0);
     });
 
     const activeTab = screen.getByRole('button', { name: /Active Care/i });
@@ -110,7 +110,7 @@ describe('DashboardCustomersPage (Customer CRM Roster)', () => {
     render(<DashboardCustomersPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('George Joseph')).toBeTruthy();
+      expect(screen.getAllByText('George Joseph').length).toBeGreaterThan(0);
     });
 
     const pendingTab = screen.getByRole('button', { name: /Pending Assignment/i });
@@ -127,9 +127,9 @@ describe('DashboardCustomersPage (Customer CRM Roster)', () => {
     render(<DashboardCustomersPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('CUST-2026-100001')).toBeTruthy();
-      expect(screen.getByText(/Anitha Rajan/i)).toBeTruthy();
-      expect(screen.getByText(/Unassigned/i)).toBeTruthy();
+      expect(screen.getAllByText('CUST-2026-100001').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Anitha Rajan/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Unassigned/i).length).toBeGreaterThan(0);
       expect(screen.getAllByRole('link', { name: /View Profile & Caregiver/i }).length).toBe(2);
     });
   });

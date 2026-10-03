@@ -119,7 +119,10 @@ export class WhatsAppIntakeService {
    * Clean and normalize phone number
    */
   normalizePhoneNumber(phone: string): string {
-    const digits = phone.replace(/[^0-9]/g, '');
+    let digits = phone.replace(/[^0-9]/g, '');
+    if (digits.length === 11 && digits.startsWith('0')) {
+      digits = digits.substring(1);
+    }
     if (digits.length === 10) {
       return `91${digits}`;
     }
@@ -247,7 +250,7 @@ export class WhatsAppIntakeService {
     const text = rawText.trim();
     const lowerText = text.toLowerCase();
 
-    this.logger.log(`Processing intake message from ${phone}: "${text}"`);
+    console.log(`[WhatsApp Intake Flow] 📥 Inbound text from ${phone}: "${text}"`);
 
     // 1. Look up existing active session
     let session = await this.sessionRepository.findOne({
@@ -257,6 +260,10 @@ export class WhatsAppIntakeService {
       },
       order: { createdAt: 'DESC' },
     });
+
+    console.log(
+      `[WhatsApp Intake Flow] 📋 Session state: ${session ? `Session ID=${session.id}, Step=${session.currentStep}` : 'No active session (creating new)'}`
+    );
 
     const agencyName = await this.getAgencyName(session?.tenantId || tenantId);
 

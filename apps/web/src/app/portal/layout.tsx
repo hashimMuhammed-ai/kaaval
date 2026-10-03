@@ -26,6 +26,7 @@ export default function CaregiverPortalLayout({
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [mounted, setMounted] = useState<boolean>(false);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
+  const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
@@ -62,9 +63,37 @@ export default function CaregiverPortalLayout({
         router.push('/login');
       }
 
+      // Set theme-color meta tag and canvas background for mobile status bar & notch
+      let metaTheme = document.querySelector('meta[name="theme-color"]');
+      let createdMeta = false;
+      const prevTheme = metaTheme?.getAttribute('content') || '#070b14';
+      if (metaTheme) {
+        metaTheme.setAttribute('content', '#ffffff');
+      } else {
+        metaTheme = document.createElement('meta');
+        metaTheme.setAttribute('name', 'theme-color');
+        metaTheme.setAttribute('content', '#ffffff');
+        document.head.appendChild(metaTheme);
+        createdMeta = true;
+      }
+
+      const prevHtmlBg = document.documentElement.style.backgroundColor;
+      const prevBodyBg = document.body.style.backgroundColor;
+      document.documentElement.style.backgroundColor = '#ffffff';
+      document.body.style.backgroundColor = '#ffffff';
+
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
+        if (metaTheme) {
+          if (createdMeta) {
+            metaTheme.remove();
+          } else {
+            metaTheme.setAttribute('content', prevTheme);
+          }
+        }
+        document.documentElement.style.backgroundColor = prevHtmlBg;
+        document.body.style.backgroundColor = prevBodyBg;
       };
     }
   }, []);
@@ -134,17 +163,14 @@ export default function CaregiverPortalLayout({
       ),
     },
     {
-      id: 'tab-documents',
-      label: 'Docs',
-      href: '/portal/documents',
+      id: 'tab-profile',
+      label: 'Profile',
+      href: '/portal/profile',
       exact: false,
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-          <polyline points="10 9 9 9 8 9" />
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
         </svg>
       ),
     },
@@ -155,11 +181,11 @@ export default function CaregiverPortalLayout({
       id="caregiver-portal-root"
       style={{
         minHeight: '100vh',
-        backgroundColor: '#050811',
+        backgroundColor: '#F8FAFC',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        color: '#f8fafc',
+        color: '#172033',
         position: 'relative',
       }}
     >
@@ -170,14 +196,14 @@ export default function CaregiverPortalLayout({
           width: '100%',
           maxWidth: '480px',
           minHeight: '100vh',
-          backgroundColor: '#090e1a',
-          boxShadow: '0 0 40px rgba(0, 0, 0, 0.75)',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 0 35px rgba(0, 0, 0, 0.07)',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.06)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.06)',
-          paddingBottom: '84px', // Space for bottom navigation
+          borderLeft: '1px solid #e2e8f0',
+          borderRight: '1px solid #e2e8f0',
+          paddingBottom: 'calc(84px + env(safe-area-inset-bottom, 0px))', // Space for bottom navigation
         }}
       >
         {/* Offline Alert Strip */}
@@ -185,9 +211,10 @@ export default function CaregiverPortalLayout({
           <div
             id="portal-offline-banner"
             style={{
-              backgroundColor: '#b45309',
-              color: '#fef3c7',
+              backgroundColor: '#D97706',
+              color: '#ffffff',
               padding: '0.45rem 1rem',
+              paddingTop: 'calc(0.45rem + env(safe-area-inset-top, 0px))',
               fontSize: '0.78rem',
               fontWeight: 600,
               display: 'flex',
@@ -216,14 +243,17 @@ export default function CaregiverPortalLayout({
           <div
             id="portal-staff-preview-banner"
             style={{
-              backgroundColor: 'rgba(20, 184, 166, 0.15)',
-              borderBottom: '1px solid rgba(20, 184, 166, 0.35)',
+              backgroundColor: '#f0fdfa',
+              borderBottom: '1px solid #ccfbf1',
               padding: '0.5rem 1rem',
+              paddingTop: isOnline
+                ? 'calc(0.5rem + env(safe-area-inset-top, 0px))'
+                : '0.5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               fontSize: '0.78rem',
-              color: '#2dd4bf',
+              color: '#0f766e',
             }}
           >
             <span style={{ fontWeight: 600 }}>👁️ Staff Preview Mode</span>
@@ -231,7 +261,7 @@ export default function CaregiverPortalLayout({
               href="/dashboard"
               id="return-to-dashboard-btn"
               style={{
-                color: '#ffffff',
+                color: '#0d9488',
                 textDecoration: 'underline',
                 fontWeight: 600,
                 fontSize: '0.75rem',
@@ -249,28 +279,31 @@ export default function CaregiverPortalLayout({
             position: 'sticky',
             top: 0,
             zIndex: 40,
-            backgroundColor: 'rgba(9, 14, 26, 0.94)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '0.85rem 1.15rem',
+            backgroundColor: '#ffffff',
+            borderBottom: '1px solid #e2e8f0',
+            paddingTop: !isOnline || isStaffPreview
+              ? '0.85rem'
+              : 'calc(0.85rem + env(safe-area-inset-top, 0px))',
+            paddingBottom: '0.85rem',
+            paddingLeft: 'max(1.15rem, env(safe-area-inset-left, 0px))',
+            paddingRight: 'max(1.15rem, env(safe-area-inset-right, 0px))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
           }}
         >
-          {/* Brand & Connectivity */}
+          {/* Brand & Agency Identity (Minimalist Native App Style) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div
               style={{
                 width: '36px',
                 height: '36px',
                 borderRadius: '10px',
-                background: 'linear-gradient(135deg, #14b8a6, #0d9488)',
+                background: 'linear-gradient(135deg, #0F766E, #115e59)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 10px rgba(20, 184, 166, 0.35)',
+                boxShadow: '0 4px 10px rgba(15, 118, 110, 0.25)',
                 color: '#ffffff',
                 flexShrink: 0,
               }}
@@ -280,76 +313,42 @@ export default function CaregiverPortalLayout({
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: '0.925rem', fontWeight: 700, color: '#ffffff', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#172033', lineHeight: 1.2 }}>
                 Caregiver Portal
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.15rem' }}>
-                <span
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    backgroundColor: isOnline ? '#10b981' : '#f59e0b',
-                    boxShadow: isOnline ? '0 0 6px #10b981' : '0 0 6px #f59e0b',
-                  }}
-                />
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                  {isOnline ? 'Online' : 'Offline'} &bull; {subdomain ? `${subdomain}` : 'Kerala Care'}
-                </span>
+              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.1rem', fontWeight: 500 }}>
+                {subdomain ? `${subdomain}` : 'Kerala Care'}
               </div>
             </div>
           </div>
 
-          {/* User Initial & Logout */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(20, 184, 166, 0.18)',
-                border: '1px solid rgba(20, 184, 166, 0.4)',
-                color: '#2dd4bf',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-              }}
-              title={user.name}
-            >
-              {user.name ? user.name.charAt(0) : 'C'}
-            </div>
-
-            <button
-              onClick={handleLogout}
-              id="portal-logout-btn"
-              title="Sign Out"
-              aria-label="Sign Out"
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                color: '#94a3b8',
-                padding: '0.35rem 0.6rem',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-                transition: 'all 0.2s',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              <span>Exit</span>
-            </button>
-          </div>
+          {/* Help Button in Header Right */}
+          <button
+            type="button"
+            id="portal-header-help-btn"
+            onClick={() => setShowHelpModal(true)}
+            aria-label="Caregiver Help & Emergency Support"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '9999px',
+              padding: '0.35rem 0.75rem',
+              color: '#DC2626',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <span>Help</span>
+          </button>
         </header>
 
         {/* Main Content Viewport */}
@@ -378,17 +377,18 @@ export default function CaregiverPortalLayout({
             transform: 'translateX(-50%)',
             width: '100%',
             maxWidth: '480px',
-            height: '72px',
-            backgroundColor: 'rgba(11, 17, 32, 0.96)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            height: 'calc(70px + env(safe-area-inset-bottom, 0px))',
+            backgroundColor: '#ffffff',
+            borderTop: 'none',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'space-around',
             zIndex: 50,
-            padding: '0 0.5rem env(safe-area-inset-bottom, 0)',
-            boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.4)',
+            paddingTop: '0.45rem',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            paddingLeft: 'max(0.5rem, env(safe-area-inset-left, 0px))',
+            paddingRight: 'max(0.5rem, env(safe-area-inset-right, 0px))',
+            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.05)',
           }}
         >
           {navItems.map((item) => {
@@ -406,33 +406,16 @@ export default function CaregiverPortalLayout({
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.25rem',
+                  gap: '0.2rem',
                   flex: 1,
-                  height: '100%',
-                  color: isActive ? '#2dd4bf' : '#64748b',
+                  height: '52px',
+                  color: isActive ? '#2563EB' : '#475569',
                   position: 'relative',
                   transition: 'color 0.2s ease',
                   textDecoration: 'none',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                {/* Active Indicator Top Glow */}
-                {isActive && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '28px',
-                      height: '3px',
-                      borderRadius: '0 0 4px 4px',
-                      backgroundColor: '#2dd4bf',
-                      boxShadow: '0 0 10px #2dd4bf',
-                    }}
-                  />
-                )}
-
                 <div
                   style={{
                     transform: isActive ? 'translateY(-1px) scale(1.08)' : 'none',
@@ -458,6 +441,243 @@ export default function CaregiverPortalLayout({
             );
           })}
         </nav>
+
+        {/* Help Action Sheet / Modal */}
+        {showHelpModal && (
+          <div
+            id="portal-help-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Caregiver Help & Emergency Support"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.65)',
+              backdropFilter: 'blur(4px)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+            }}
+            onClick={() => setShowHelpModal(false)}
+          >
+            <div
+              style={{
+                width: '100%',
+                maxWidth: '480px',
+                backgroundColor: '#ffffff',
+                borderTopLeftRadius: '24px',
+                borderTopRightRadius: '24px',
+                padding: '1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px))',
+                boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.2)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Drag Handle indicator */}
+              <div
+                style={{
+                  width: '36px',
+                  height: '4px',
+                  backgroundColor: '#cbd5e1',
+                  borderRadius: '2px',
+                  alignSelf: 'center',
+                  marginBottom: '0.25rem',
+                }}
+              />
+
+              {/* Title & Description */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    backgroundColor: '#fee2e2',
+                    color: '#DC2626',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                    flexShrink: 0,
+                  }}
+                >
+                  🆘
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#172033', margin: 0, lineHeight: 1.2 }}>
+                    Emergency & Duty Help
+                  </h3>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
+                    Direct contact for office staff assistance or emergency
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.25rem' }}>
+                {/* 1. Call Office Staff */}
+                <a
+                  id="help-call-office-btn"
+                  href="tel:+919876543210"
+                  aria-label="Call Office Staff"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.9rem 1rem',
+                    backgroundColor: '#fef2f2',
+                    border: '1.5px solid #fca5a5',
+                    borderRadius: '14px',
+                    textDecoration: 'none',
+                    color: '#DC2626',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        backgroundColor: '#fee2e2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#991b1b' }}>
+                        Call Office Staff
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#b91c1c' }}>
+                        +91 98765 43210 &bull; Duty Coordinator
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#DC2626' }}>Call &rarr;</span>
+                </a>
+
+                {/* 2. WhatsApp Support */}
+                <a
+                  id="help-whatsapp-btn"
+                  href="https://wa.me/919876543210?text=Caregiver%20Duty%20Assistance%20Needed"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp Office Support"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.9rem 1rem',
+                    backgroundColor: '#f0fdf4',
+                    border: '1.5px solid #86efac',
+                    borderRadius: '14px',
+                    textDecoration: 'none',
+                    color: '#15803D',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        backgroundColor: '#dcfce7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.316 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.818-.981z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534' }}>
+                        WhatsApp Office Support
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#15803D' }}>
+                        Quick chat for duty coordination
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#15803D' }}>Chat &rarr;</span>
+                </a>
+
+                {/* 3. Emergency Medical Help (Ambulance 108) */}
+                <a
+                  id="help-ambulance-btn"
+                  href="tel:108"
+                  aria-label="Call 108 Ambulance"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.85rem 1rem',
+                    backgroundColor: '#fffbeb',
+                    border: '1.5px solid #fde68a',
+                    borderRadius: '14px',
+                    textDecoration: 'none',
+                    color: '#b45309',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        backgroundColor: '#fef3c7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.1rem',
+                      }}
+                    >
+                      🚑
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#92400e' }}>
+                        Emergency Ambulance (108)
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#b45309' }}>
+                        Government 24/7 Medical Emergency Line
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#b45309' }}>Call 108 &rarr;</span>
+                </a>
+              </div>
+
+              {/* Close Button */}
+              <button
+                type="button"
+                id="help-close-btn"
+                onClick={() => setShowHelpModal(false)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  backgroundColor: '#f1f5f9',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '12px',
+                  color: '#475569',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  marginTop: '0.25rem',
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

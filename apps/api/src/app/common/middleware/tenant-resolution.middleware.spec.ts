@@ -13,6 +13,7 @@ describe('TenantResolutionMiddleware', () => {
     id: 'tenant-111',
     name: 'Care Kerala Agency',
     subdomain: 'carekerala',
+    tenantSlug: 'carekerala',
     status: TenantStatus.ACTIVE,
   };
 
@@ -44,7 +45,9 @@ describe('TenantResolutionMiddleware', () => {
     expect(mockRequest.tenant).toBe(mockTenant);
     expect(mockRequest.tenantId).toBe('tenant-111');
     expect(mockRequest.subdomain).toBe('carekerala');
+    expect(mockRequest.tenantSlug).toBe('carekerala');
     expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Resolved-Tenant', 'carekerala');
+    expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Resolved-Tenant-Slug', 'carekerala');
     expect(mockNext).toHaveBeenCalledWith();
   });
 
@@ -53,6 +56,56 @@ describe('TenantResolutionMiddleware', () => {
 
     await middleware.use(mockRequest, mockResponse, mockNext);
 
+    expect(mockRequest.tenant).toBeUndefined();
+    expect(mockNext).toHaveBeenCalledWith();
+  });
+
+  it('should bypass tenant resolution for /health without invoking tenantResolver', async () => {
+    mockRequest.originalUrl = '/health';
+
+    await middleware.use(mockRequest, mockResponse, mockNext);
+
+    expect(mockTenantResolver.resolveFromRequest).not.toHaveBeenCalled();
+    expect(mockRequest.tenant).toBeUndefined();
+    expect(mockNext).toHaveBeenCalledWith();
+  });
+
+  it('should bypass tenant resolution for /health/?query=1 with trailing slash and query string', async () => {
+    mockRequest.originalUrl = '/health/?query=1';
+
+    await middleware.use(mockRequest, mockResponse, mockNext);
+
+    expect(mockTenantResolver.resolveFromRequest).not.toHaveBeenCalled();
+    expect(mockRequest.tenant).toBeUndefined();
+    expect(mockNext).toHaveBeenCalledWith();
+  });
+
+  it('should bypass tenant resolution for /api/health without invoking tenantResolver', async () => {
+    mockRequest.url = '/api/health';
+
+    await middleware.use(mockRequest, mockResponse, mockNext);
+
+    expect(mockTenantResolver.resolveFromRequest).not.toHaveBeenCalled();
+    expect(mockRequest.tenant).toBeUndefined();
+    expect(mockNext).toHaveBeenCalledWith();
+  });
+
+  it('should bypass tenant resolution for /api/health/?probe=live with trailing slash and query string', async () => {
+    mockRequest.originalUrl = '/api/health/?probe=live';
+
+    await middleware.use(mockRequest, mockResponse, mockNext);
+
+    expect(mockTenantResolver.resolveFromRequest).not.toHaveBeenCalled();
+    expect(mockRequest.tenant).toBeUndefined();
+    expect(mockNext).toHaveBeenCalledWith();
+  });
+
+  it('should bypass tenant resolution for /HEALTH in a case-insensitive manner', async () => {
+    mockRequest.originalUrl = '/HEALTH';
+
+    await middleware.use(mockRequest, mockResponse, mockNext);
+
+    expect(mockTenantResolver.resolveFromRequest).not.toHaveBeenCalled();
     expect(mockRequest.tenant).toBeUndefined();
     expect(mockNext).toHaveBeenCalledWith();
   });

@@ -147,35 +147,35 @@ export default function CaregiverDocumentsPage() {
     if (doc.expiryStatus === 'expired') {
       return {
         text: 'Expired',
-        color: '#f87171',
-        bg: 'rgba(239, 68, 68, 0.15)',
-        border: 'rgba(239, 68, 68, 0.4)',
+        color: '#DC2626',
+        bg: '#fef2f2',
+        border: '#fecaca',
         desc: doc.expiryDate ? `Expired on ${new Date(doc.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'Expired',
       };
     }
     if (doc.expiryStatus === 'expiring_soon') {
       return {
         text: `Expiring in ${doc.daysUntilExpiry ?? '<30'}d`,
-        color: '#fbbf24',
-        bg: 'rgba(245, 158, 11, 0.15)',
-        border: 'rgba(245, 158, 11, 0.4)',
+        color: '#D97706',
+        bg: '#fffbeb',
+        border: '#fde68a',
         desc: doc.expiryDate ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'Expiring Soon',
       };
     }
     if (doc.expiryStatus === 'valid') {
       return {
         text: 'Valid',
-        color: '#34d399',
-        bg: 'rgba(16, 185, 129, 0.15)',
-        border: 'rgba(16, 185, 129, 0.4)',
+        color: '#15803D',
+        bg: '#f0fdf4',
+        border: '#bbf7d0',
         desc: doc.expiryDate ? `Valid until ${new Date(doc.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'Valid',
       };
     }
     return {
       text: 'Lifetime Valid',
-      color: '#94a3b8',
-      bg: 'rgba(255, 255, 255, 0.06)',
-      border: 'rgba(255, 255, 255, 0.1)',
+      color: '#475569',
+      bg: '#F8FAFC',
+      border: '#cbd5e1',
       desc: 'No Expiry Date',
     };
   };
@@ -195,32 +195,32 @@ export default function CaregiverDocumentsPage() {
             <span style={{ fontSize: '1.3rem' }}>📑</span>
             <h1
               id="documents-page-title"
-              style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}
+              style={{ fontSize: '1.35rem', fontWeight: 800, color: '#172033', letterSpacing: '-0.01em' }}
             >
               Certifications & IDs
             </h1>
           </div>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+          <p style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.15rem' }}>
             Verified credentials, identity proofs, and license expiry tracking on file with your agency.
           </p>
         </div>
 
         <Link
-          href="/portal"
-          id="back-to-home-link"
+          href="/portal/profile"
+          id="back-to-profile-link"
           style={{
             fontSize: '0.78rem',
-            color: 'var(--primary-400)',
+            color: '#2563EB',
             textDecoration: 'none',
             padding: '0.4rem 0.75rem',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'rgba(20, 184, 166, 0.1)',
-            border: '1px solid rgba(20, 184, 166, 0.25)',
+            backgroundColor: '#eff6ff',
+            border: '1px solid #bfdbfe',
             fontWeight: 600,
             whiteSpace: 'nowrap',
           }}
         >
-          &larr; Home
+          &larr; Profile
         </Link>
       </div>
 
@@ -231,11 +231,11 @@ export default function CaregiverDocumentsPage() {
         style={{
           padding: '1.15rem',
           background: metrics.actionNeeded > 0
-            ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.95))'
-            : 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.95))',
+            ? 'linear-gradient(135deg, #ffffff, #fffbeb)'
+            : 'linear-gradient(135deg, #ffffff, #f0fdfa)',
           border: metrics.actionNeeded > 0
-            ? '1px solid rgba(245, 158, 11, 0.3)'
-            : '1px solid rgba(16, 185, 129, 0.3)',
+            ? '1px solid #fde68a'
+            : '1px solid #ccfbf1',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.85rem',
@@ -243,10 +243,10 @@ export default function CaregiverDocumentsPage() {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div style={{ fontSize: '0.72rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Verification Health
             </div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ffffff', marginTop: '0.15rem' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#172033', marginTop: '0.15rem' }}>
               {metrics.total === 0
                 ? 'No Credentials Uploaded'
                 : metrics.actionNeeded > 0
@@ -261,9 +261,9 @@ export default function CaregiverDocumentsPage() {
               padding: '0.3rem 0.65rem',
               borderRadius: 'var(--radius-full)',
               backgroundColor: metrics.verified === metrics.total && metrics.total > 0
-                ? 'rgba(52, 211, 153, 0.15)'
-                : 'rgba(255, 255, 255, 0.08)',
-              color: metrics.verified === metrics.total && metrics.total > 0 ? '#34d399' : 'var(--text-secondary)',
+                ? '#f0fdf4'
+                : '#F8FAFC',
+              color: metrics.verified === metrics.total && metrics.total > 0 ? '#15803D' : '#475569',
               fontSize: '0.72rem',
               fontWeight: 700,
               display: 'flex',
@@ -283,13 +283,13 @@ export default function CaregiverDocumentsPage() {
             style={{
               padding: '0.65rem 0.85rem',
               borderRadius: 'var(--radius-md)',
-              backgroundColor: metrics.expired > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-              border: metrics.expired > 0 ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)',
+              backgroundColor: metrics.expired > 0 ? '#fef2f2' : '#fffbeb',
+              border: metrics.expired > 0 ? '1px solid #fecaca' : '1px solid #fde68a',
               display: 'flex',
               alignItems: 'center',
               gap: '0.6rem',
               fontSize: '0.78rem',
-              color: metrics.expired > 0 ? '#fca5a5' : '#fde047',
+              color: metrics.expired > 0 ? '#DC2626' : '#D97706',
             }}
           >
             <span style={{ fontSize: '1.1rem' }}>⚠️</span>
@@ -311,9 +311,9 @@ export default function CaregiverDocumentsPage() {
             style={{
               padding: '0.35rem 0.8rem',
               borderRadius: 'var(--radius-full)',
-              border: activeFilter === 'all' ? '1px solid var(--primary-400)' : '1px solid rgba(255, 255, 255, 0.1)',
-              backgroundColor: activeFilter === 'all' ? 'rgba(20, 184, 166, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-              color: activeFilter === 'all' ? '#14b8a6' : 'var(--text-secondary)',
+              border: activeFilter === 'all' ? '1px solid #2563EB' : '1px solid #e2e8f0',
+              backgroundColor: activeFilter === 'all' ? '#eff6ff' : '#F8FAFC',
+              color: activeFilter === 'all' ? '#2563EB' : '#475569',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer',
@@ -328,9 +328,9 @@ export default function CaregiverDocumentsPage() {
             style={{
               padding: '0.35rem 0.8rem',
               borderRadius: 'var(--radius-full)',
-              border: activeFilter === 'verified' ? '1px solid #34d399' : '1px solid rgba(255, 255, 255, 0.1)',
-              backgroundColor: activeFilter === 'verified' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-              color: activeFilter === 'verified' ? '#34d399' : 'var(--text-secondary)',
+              border: activeFilter === 'verified' ? '1px solid #15803D' : '1px solid #e2e8f0',
+              backgroundColor: activeFilter === 'verified' ? '#f0fdf4' : '#F8FAFC',
+              color: activeFilter === 'verified' ? '#15803D' : '#475569',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer',
@@ -346,9 +346,9 @@ export default function CaregiverDocumentsPage() {
               style={{
                 padding: '0.35rem 0.8rem',
                 borderRadius: 'var(--radius-full)',
-                border: activeFilter === 'action_needed' ? '1px solid #fbbf24' : '1px solid rgba(255, 255, 255, 0.1)',
-                backgroundColor: activeFilter === 'action_needed' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                color: activeFilter === 'action_needed' ? '#fbbf24' : 'var(--text-secondary)',
+                border: activeFilter === 'action_needed' ? '1px solid #D97706' : '1px solid #e2e8f0',
+                backgroundColor: activeFilter === 'action_needed' ? '#fffbeb' : '#F8FAFC',
+                color: activeFilter === 'action_needed' ? '#D97706' : '#475569',
                 fontSize: '0.75rem',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -363,7 +363,7 @@ export default function CaregiverDocumentsPage() {
 
       {/* Documents List */}
       <section style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-        <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#172033', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Credentials & Licenses ({filteredDocs.length})
         </h2>
 
@@ -394,10 +394,10 @@ export default function CaregiverDocumentsPage() {
                     flexDirection: 'column',
                     gap: '0.85rem',
                     border: doc.expiryStatus === 'expired'
-                      ? '1px solid rgba(239, 68, 68, 0.35)'
+                      ? '1px solid #fecaca'
                       : doc.expiryStatus === 'expiring_soon'
-                      ? '1px solid rgba(245, 158, 11, 0.35)'
-                      : '1px solid rgba(255, 255, 255, 0.08)',
+                      ? '1px solid #fde68a'
+                      : '1px solid #e2e8f0',
                     transition: 'all 0.2s ease',
                   }}
                 >
@@ -409,8 +409,8 @@ export default function CaregiverDocumentsPage() {
                           width: '40px',
                           height: '40px',
                           borderRadius: 'var(--radius-md)',
-                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          backgroundColor: '#f8fafc',
+                          border: '1px solid #e2e8f0',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -427,14 +427,14 @@ export default function CaregiverDocumentsPage() {
                           style={{
                             fontSize: '0.95rem',
                             fontWeight: 700,
-                            color: '#ffffff',
+                            color: '#172033',
                             lineHeight: 1.25,
                             margin: 0,
                           }}
                         >
                           {doc.title || doc.documentType}
                         </h3>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#475569', marginTop: '0.2rem' }}>
                           {typeInfo.label}
                         </div>
                       </div>
@@ -445,9 +445,9 @@ export default function CaregiverDocumentsPage() {
                       style={{
                         fontSize: '0.72rem',
                         fontWeight: 700,
-                        color: doc.verified ? '#34d399' : '#fbbf24',
-                        backgroundColor: doc.verified ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                        border: doc.verified ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
+                        color: doc.verified ? '#15803D' : '#D97706',
+                        backgroundColor: doc.verified ? '#f0fdf4' : '#fffbeb',
+                        border: doc.verified ? '1px solid #bbf7d0' : '1px solid #fde68a',
                         padding: '0.25rem 0.6rem',
                         borderRadius: 'var(--radius-full)',
                         whiteSpace: 'nowrap',
@@ -466,15 +466,15 @@ export default function CaregiverDocumentsPage() {
                       flexWrap: 'wrap',
                       gap: '0.5rem',
                       padding: '0.65rem 0.75rem',
-                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                      backgroundColor: '#F8FAFC',
                       borderRadius: 'var(--radius-md)',
-                      border: '1px solid rgba(255, 255, 255, 0.04)',
+                      border: '1px solid #e2e8f0',
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Expiry Timeline</div>
+                      <div style={{ fontSize: '0.7rem', color: '#475569' }}>Expiry Timeline</div>
                       {/* Preserving 'Expires: ...' format for existing checks */}
-                      <div style={{ fontSize: '0.78rem', color: '#ffffff', fontWeight: 600, marginTop: '0.1rem' }}>
+                      <div style={{ fontSize: '0.78rem', color: '#172033', fontWeight: 600, marginTop: '0.1rem' }}>
                         {doc.expiryDate
                           ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
                           : 'No Expiry'}
@@ -499,7 +499,7 @@ export default function CaregiverDocumentsPage() {
 
                   {/* Footer / Actions Row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.1rem' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#475569' }}>
                       {doc.mimeType && <span>{doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}</span>}
                       {sizeLabel && <span> &bull; {sizeLabel}</span>}
                     </div>
@@ -509,9 +509,9 @@ export default function CaregiverDocumentsPage() {
                       id={`view-doc-btn-${doc.id}`}
                       onClick={() => setSelectedDoc(doc)}
                       style={{
-                        backgroundColor: 'rgba(20, 184, 166, 0.12)',
-                        border: '1px solid rgba(20, 184, 166, 0.3)',
-                        color: '#14b8a6',
+                        backgroundColor: '#eff6ff',
+                        border: '1px solid #bfdbfe',
+                        color: '#2563EB',
                         padding: '0.4rem 0.85rem',
                         borderRadius: 'var(--radius-md)',
                         fontSize: '0.75rem',
@@ -538,14 +538,14 @@ export default function CaregiverDocumentsPage() {
               padding: '2.5rem 1.5rem',
               textAlign: 'center',
               color: 'var(--text-secondary)',
-              border: '1px dashed rgba(255, 255, 255, 0.15)',
+              border: '1px dashed #cbd5e1',
             }}
           >
             <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📄</div>
-            <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.35rem' }}>
+            <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#172033', marginBottom: '0.35rem' }}>
               Credentials on File
             </div>
-            <p style={{ fontSize: '0.8rem', lineHeight: 1.5, margin: '0 auto', maxWidth: '320px' }}>
+            <p style={{ fontSize: '0.8rem', lineHeight: 1.5, margin: '0 auto', maxWidth: '320px', color: '#475569' }}>
               Identity proofs, nursing certificates, and police verifications are uploaded and verified by agency coordinators during onboarding.
             </p>
           </div>
@@ -558,8 +558,8 @@ export default function CaregiverDocumentsPage() {
         className="glass-panel"
         style={{
           padding: '1.1rem',
-          backgroundColor: 'rgba(15, 23, 42, 0.65)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          backgroundColor: '#F8FAFC',
+          border: '1px solid #e2e8f0',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.65rem',
@@ -567,7 +567,7 @@ export default function CaregiverDocumentsPage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontSize: '1rem' }}>🔄</span>
-          <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#ffffff' }}>
+          <span style={{ fontSize: '0.825rem', fontWeight: 700, color: '#172033' }}>
             Need to Update or Renew Documents?
           </span>
         </div>
@@ -626,15 +626,15 @@ export default function CaregiverDocumentsPage() {
             style={{
               width: '100%',
               maxWidth: '520px',
-              backgroundColor: '#0f172a',
+              backgroundColor: '#ffffff',
               borderTopLeftRadius: '20px',
               borderTopRightRadius: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              border: '1px solid #e2e8f0',
               borderBottom: 'none',
               maxHeight: '85vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.5)',
+              boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.15)',
               overflow: 'hidden',
             }}
           >
@@ -642,7 +642,7 @@ export default function CaregiverDocumentsPage() {
             <div
               style={{
                 padding: '1.25rem',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                borderBottom: '1px solid #e2e8f0',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -653,11 +653,11 @@ export default function CaregiverDocumentsPage() {
                 <div>
                   <h3
                     id="document-modal-title"
-                    style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', margin: 0 }}
+                    style={{ fontSize: '1.05rem', fontWeight: 800, color: '#172033', margin: 0 }}
                   >
                     {selectedDoc.title || selectedDoc.documentType}
                   </h3>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#475569' }}>
                     {getDocTypeInfo(selectedDoc.documentType, selectedDoc.title).label}
                   </div>
                 </div>
@@ -669,9 +669,9 @@ export default function CaregiverDocumentsPage() {
                 onClick={() => setSelectedDoc(null)}
                 aria-label="Close document details"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: 'none',
-                  color: '#ffffff',
+                  background: '#F8FAFC',
+                  border: '1px solid #e2e8f0',
+                  color: '#475569',
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
@@ -694,16 +694,16 @@ export default function CaregiverDocumentsPage() {
                   style={{
                     padding: '0.75rem',
                     borderRadius: 'var(--radius-md)',
-                    backgroundColor: selectedDoc.verified ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)',
-                    border: selectedDoc.verified ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(245, 158, 11, 0.25)',
+                    backgroundColor: selectedDoc.verified ? '#f0fdf4' : '#fffbeb',
+                    border: selectedDoc.verified ? '1px solid #bbf7d0' : '1px solid #fde68a',
                   }}
                 >
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Verification Status</div>
+                  <div style={{ fontSize: '0.7rem', color: '#475569' }}>Verification Status</div>
                   <div
                     style={{
                       fontSize: '0.85rem',
                       fontWeight: 700,
-                      color: selectedDoc.verified ? '#34d399' : '#fbbf24',
+                      color: selectedDoc.verified ? '#15803D' : '#D97706',
                       marginTop: '0.2rem',
                     }}
                   >
@@ -719,7 +719,7 @@ export default function CaregiverDocumentsPage() {
                     border: `1px solid ${getExpiryBadge(selectedDoc).border}`,
                   }}
                 >
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Expiry Status</div>
+                  <div style={{ fontSize: '0.7rem', color: '#475569' }}>Expiry Status</div>
                   <div
                     style={{
                       fontSize: '0.85rem',
@@ -738,8 +738,8 @@ export default function CaregiverDocumentsPage() {
                 style={{
                   padding: '0.85rem',
                   borderRadius: 'var(--radius-md)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  backgroundColor: '#F8FAFC',
+                  border: '1px solid #e2e8f0',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.6rem',
@@ -747,12 +747,12 @@ export default function CaregiverDocumentsPage() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Document ID:</span>
-                  <span style={{ color: '#ffffff', fontFamily: 'monospace' }}>{selectedDoc.id.slice(0, 13)}...</span>
+                  <span style={{ color: '#475569' }}>Document ID:</span>
+                  <span style={{ color: '#172033', fontFamily: 'monospace' }}>{selectedDoc.id.slice(0, 13)}...</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Expiry Date:</span>
-                  <span style={{ color: '#ffffff', fontWeight: 600 }}>
+                  <span style={{ color: '#475569' }}>Expiry Date:</span>
+                  <span style={{ color: '#172033', fontWeight: 600 }}>
                     {selectedDoc.expiryDate
                       ? new Date(selectedDoc.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
                       : 'None (Permanent Identification)'}
@@ -760,16 +760,16 @@ export default function CaregiverDocumentsPage() {
                 </div>
                 {selectedDoc.verifiedAt && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Verified On:</span>
-                    <span style={{ color: '#34d399' }}>
+                    <span style={{ color: '#475569' }}>Verified On:</span>
+                    <span style={{ color: '#15803D' }}>
                       {new Date(selectedDoc.verifiedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
                 )}
                 {selectedDoc.fileSize && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>File Size:</span>
-                    <span style={{ color: '#ffffff' }}>{formatFileSize(selectedDoc.fileSize)}</span>
+                    <span style={{ color: '#475569' }}>File Size:</span>
+                    <span style={{ color: '#172033' }}>{formatFileSize(selectedDoc.fileSize)}</span>
                   </div>
                 )}
               </div>
@@ -786,14 +786,14 @@ export default function CaregiverDocumentsPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.5rem',
-                    backgroundColor: '#14b8a6',
+                    backgroundColor: '#2563EB',
                     color: '#ffffff',
                     padding: '0.75rem',
                     borderRadius: 'var(--radius-md)',
                     fontSize: '0.85rem',
                     fontWeight: 700,
                     textDecoration: 'none',
-                    boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)',
+                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
                   }}
                 >
                   <span>📥</span>
@@ -806,19 +806,19 @@ export default function CaregiverDocumentsPage() {
             <div
               style={{
                 padding: '1rem 1.25rem',
-                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                borderTop: '1px solid #f1f5f9',
                 display: 'flex',
                 justifyContent: 'flex-end',
-                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                backgroundColor: '#F8FAFC',
               }}
             >
               <button
                 type="button"
                 onClick={() => setSelectedDoc(null)}
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: '#ffffff',
-                  border: 'none',
+                  backgroundColor: '#ffffff',
+                  color: '#172033',
+                  border: '1px solid #e2e8f0',
                   padding: '0.5rem 1.2rem',
                   borderRadius: 'var(--radius-md)',
                   fontSize: '0.8rem',

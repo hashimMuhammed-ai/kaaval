@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '../../../utils/api';
+import { KERALA_DISTRICTS } from '../../../constants/kerala';
 
 const STATUS_CONFIG: Record<
   string,
   { label: string; color: string; bg: string; border: string; dot: string }
 > = {
   pending: {
-    label: 'Pending Review',
+    label: 'Pending',
     color: '#fbbf24',
     bg: 'rgba(245, 158, 11, 0.15)',
     border: 'rgba(245, 158, 11, 0.35)',
@@ -23,14 +24,14 @@ const STATUS_CONFIG: Record<
     dot: '#38bdf8',
   },
   matched: {
-    label: 'Caregiver Matched',
+    label: 'Matched',
     color: '#a78bfa',
     bg: 'rgba(167, 139, 250, 0.15)',
     border: 'rgba(167, 139, 250, 0.35)',
     dot: '#a78bfa',
   },
   assigned: {
-    label: 'Assigned / Active',
+    label: 'Assigned',
     color: '#34d399',
     bg: 'rgba(16, 185, 129, 0.15)',
     border: 'rgba(16, 185, 129, 0.35)',
@@ -52,24 +53,6 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const KERALA_DISTRICTS = [
-  'All Districts',
-  'Ernakulam (Kochi)',
-  'Thiruvananthapuram',
-  'Thrissur',
-  'Kozhikode',
-  'Kottayam',
-  'Kollam',
-  'Palakkad',
-  'Malappuram',
-  'Alappuzha',
-  'Kannur',
-  'Pathanamthitta',
-  'Idukki',
-  'Kasaragod',
-  'Wayanad',
-];
-
 const SERVICE_LABELS: Record<string, string> = {
   elderly_care: 'Elderly Daily Assistance',
   bedridden_care: 'Bedridden & Palliative Care',
@@ -85,6 +68,70 @@ const DURATION_LABELS: Record<string, string> = {
   '12_night': '12h Night Shift',
   custom: 'Custom Shift',
 };
+
+// Compact display for long reference IDs (e.g. "REQ-2026-894102" -> "#894102")
+function formatRefId(refId?: string): string {
+  if (!refId) return '';
+  const parts = refId.split('-');
+  if (parts.length >= 3) {
+    return `#${parts[parts.length - 1]}`;
+  }
+  return refId;
+}
+
+// Clean and deduplicate Kerala location (prevents "East Fort, Thrissur, Thrissur")
+function formatLocation(locality?: string, district?: string): string {
+  const loc = (locality || '').trim();
+  const dist = (district || '').trim();
+  if (!loc) return dist;
+  if (!dist) return loc;
+
+  const SYNONYMS: Record<string, string[]> = {
+    thiruvananthapuram: ['trivandrum'],
+    ernakulam: ['kochi', 'cochin'],
+    kozhikode: ['calicut'],
+    alappuzha: ['alleppey'],
+    palakkad: ['palghat'],
+    kollam: ['quilon'],
+    thrissur: ['trichur'],
+    kannur: ['cannanore'],
+  };
+
+  const locLower = loc.toLowerCase();
+  const cleanDistWords = dist.replace(/[()]/g, '').toLowerCase().split(/[\s,]+/);
+
+  const hasDistrict = cleanDistWords.some((word) => {
+    if (word.length > 3 && locLower.includes(word)) return true;
+    const syns = SYNONYMS[word] || [];
+    return syns.some((syn) => locLower.includes(syn));
+  });
+
+  if (hasDistrict) {
+    return loc;
+  }
+
+  return `${loc}, ${dist}`;
+}
+
+// Format bystander relationship cleanly (e.g. "son" -> "Son", "son_daughter" -> "Son / Daughter")
+function formatRelationship(rel?: string): string {
+  if (!rel) return 'Family';
+  const map: Record<string, string> = {
+    son: 'Son',
+    daughter: 'Daughter',
+    son_daughter: 'Son / Daughter',
+    spouse: 'Spouse',
+    brother: 'Brother',
+    sister: 'Sister',
+    sibling: 'Brother / Sister',
+    parent: 'Parent',
+    relative: 'Relative',
+    self: 'Self (Patient)',
+  };
+  const key = rel.toLowerCase().trim();
+  if (map[key]) return map[key];
+  return rel.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function DashboardRequestsPage() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -122,7 +169,12 @@ export default function DashboardRequestsPage() {
           setStats(res.meta.stats);
         }
       }
-    } catch {
+    } catch (err: any) {
+      const isAuthError = err?.status === 401 || err?.status === 403;
+      const msg = isAuthError
+        ? 'Your login session is invalid or expired. Please log in again to view live requests.'
+        : (err?.message || 'Unable to connect to care requests service.');
+      setError(msg);
       // In standalone frontend or local test mode without running backend, load fallback requests
       const demoRequests = [
         {
@@ -142,7 +194,7 @@ export default function DashboardRequestsPage() {
           district: 'Ernakulam (Kochi)',
           locality: 'Kaloor, Kochi',
           contactName: 'Dr. Thomas Varghese',
-          relationship: 'son_daughter',
+          relationship: 'son',
           phone: '+919847012345',
           isWhatsapp: true,
           status: 'pending',
@@ -166,7 +218,7 @@ export default function DashboardRequestsPage() {
           district: 'Thrissur',
           locality: 'East Fort, Thrissur',
           contactName: 'Suresh Kumar',
-          relationship: 'son_daughter',
+          relationship: 'son',
           phone: '+919847198765',
           isWhatsapp: true,
           status: 'contacted',
@@ -277,20 +329,21 @@ export default function DashboardRequestsPage() {
         <div
           style={{
             position: 'fixed',
-            bottom: '2rem',
-            right: '2rem',
+            bottom: 'calc(75px + env(safe-area-inset-bottom, 0px))',
+            right: '1rem',
             zIndex: 999,
             backgroundColor: '#0f766e',
             color: '#ffffff',
-            padding: '0.85rem 1.4rem',
+            padding: '0.75rem 1.25rem',
             borderRadius: 'var(--radius-md)',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
             border: '1px solid #14b8a6',
-            fontSize: '0.9rem',
+            fontSize: '0.85rem',
             fontWeight: 500,
             display: 'flex',
             alignItems: 'center',
             gap: '0.6rem',
+            maxWidth: 'calc(100vw - 2rem)',
           }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -307,33 +360,30 @@ export default function DashboardRequestsPage() {
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '1.25rem',
-          marginBottom: '2rem',
+          gap: '0.85rem',
+          marginBottom: '1.25rem',
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
-            <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
-              Client Care Requests & Intake
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
+            <h1 style={{ fontSize: 'clamp(1.35rem, 3.5vw, 1.85rem)', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0 }}>
+              Care Requests
             </h1>
-            <span className="badge badge-teal" style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem' }}>
-              60-Min SLA Active
-            </span>
           </div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>
+          <p className="desktop-only" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
             Public website submissions and WhatsApp leads automatically synchronized with instant owner alerts.
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
           <button
             onClick={fetchRequests}
             className="btn-secondary"
             id="refresh-requests-btn"
-            style={{ padding: '0.6rem 1rem', fontSize: '0.875rem' }}
+            style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
             title="Refresh requests"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M23 4v6h-6M1 20v-6h6" />
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
             </svg>
@@ -343,12 +393,12 @@ export default function DashboardRequestsPage() {
           <Link
             href="/#request-form"
             target="_blank"
-            className="btn-primary"
+            className="btn-primary desktop-only"
             id="open-public-form-btn"
-            style={{ padding: '0.6rem 1.15rem', fontSize: '0.875rem', gap: '0.5rem' }}
+            style={{ padding: '0.55rem 1rem', fontSize: '0.825rem', gap: '0.45rem', whiteSpace: 'nowrap' }}
           >
             <span>Open Public Form</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
               <polyline points="15 3 21 3 21 9" />
               <line x1="10" y1="14" x2="21" y2="3" />
@@ -357,8 +407,49 @@ export default function DashboardRequestsPage() {
         </div>
       </div>
 
-      {/* KPI Stats Cards */}
+      {/* Error Alert Banner */}
+      {error && (
+        <div
+          role="alert"
+          style={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fca5a5',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.85rem 1.25rem',
+            marginBottom: '1.25rem',
+            color: '#991b1b',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            fontSize: '0.875rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div>
+              <span style={{ fontWeight: 600 }}>Notice: </span>
+              <span>{error}</span>
+            </div>
+          </div>
+          <button
+            onClick={fetchRequests}
+            className="btn-secondary"
+            style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* KPI Stats Cards - Visible on desktop, hidden on mobile to prioritize incoming requests */}
       <div
+        className="desktop-only"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
@@ -366,11 +457,11 @@ export default function DashboardRequestsPage() {
           marginBottom: '2rem',
         }}
       >
-        <div className="glass-card" style={{ padding: '1.25rem' }}>
+        <div className="glass-card" style={{ padding: '1.25rem', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)' }}>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.825rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
             Total Intake Enquiries
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)' }}>
             {stats.total}
           </div>
           <div style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -383,11 +474,16 @@ export default function DashboardRequestsPage() {
           style={{
             padding: '1.25rem',
             borderLeft: '4px solid #f59e0b',
-            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(11, 17, 32, 0.6))',
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), #ffffff)',
+            borderTop: '1px solid #e2e8f0',
+            borderRight: '1px solid #e2e8f0',
+            borderBottom: '1px solid #e2e8f0',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ color: '#fbbf24', fontSize: '0.825rem', fontWeight: 600, textTransform: 'uppercase' }}>
+            <span style={{ color: '#b45309', fontSize: '0.825rem', fontWeight: 700, textTransform: 'uppercase' }}>
               Pending Coordinator Review
             </span>
             <span
@@ -396,16 +492,16 @@ export default function DashboardRequestsPage() {
                 height: '8px',
                 borderRadius: '50%',
                 backgroundColor: '#f59e0b',
-                boxShadow: '0 0 8px #f59e0b',
+                boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
                 display: 'inline-block',
               }}
             />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff', marginTop: '0.25rem' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '0.25rem' }}>
             {stats.pending}
           </div>
-          <div style={{ fontSize: '0.775rem', color: '#fbbf24', marginTop: '0.25rem' }}>
-            Needs caregiver matching within 60 mins
+          <div style={{ fontSize: '0.775rem', color: '#b45309', fontWeight: 600, marginTop: '0.25rem' }}>
+            Awaiting staff review & matching
           </div>
         </div>
 
@@ -413,14 +509,19 @@ export default function DashboardRequestsPage() {
           className="glass-card"
           style={{
             padding: '1.25rem',
-            borderLeft: '4px solid #38bdf8',
-            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(11, 17, 32, 0.6))',
+            borderLeft: '4px solid #0284c7',
+            background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.08), #ffffff)',
+            borderTop: '1px solid #e2e8f0',
+            borderRight: '1px solid #e2e8f0',
+            borderBottom: '1px solid #e2e8f0',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
-          <div style={{ color: '#38bdf8', fontSize: '0.825rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+          <div style={{ color: '#0369a1', fontSize: '0.825rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
             Contacted & Discussing
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)' }}>
             {stats.contacted}
           </div>
           <div style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -432,14 +533,19 @@ export default function DashboardRequestsPage() {
           className="glass-card"
           style={{
             padding: '1.25rem',
-            borderLeft: '4px solid #10b981',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(11, 17, 32, 0.6))',
+            borderLeft: '4px solid #059669',
+            background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.08), #ffffff)',
+            borderTop: '1px solid #e2e8f0',
+            borderRight: '1px solid #e2e8f0',
+            borderBottom: '1px solid #e2e8f0',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
-          <div style={{ color: '#34d399', fontSize: '0.825rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+          <div style={{ color: '#047857', fontSize: '0.825rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.35rem' }}>
             Caregiver Matched & Active
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#ffffff' }}>
+          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-main)' }}>
             {stats.matched + stats.assigned}
           </div>
           <div style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
@@ -452,19 +558,28 @@ export default function DashboardRequestsPage() {
       <div
         className="glass-panel"
         style={{
-          padding: '1.25rem',
+          padding: '0.85rem 1rem',
           borderRadius: 'var(--radius-lg)',
-          marginBottom: '1.5rem',
+          marginBottom: '1.25rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1rem',
+          gap: '0.75rem',
         }}
       >
         {/* Status Tabs */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.85rem' }}>
+        <div
+          className="mobile-scroll-x"
+          style={{
+            display: 'flex',
+            flexWrap: 'nowrap',
+            gap: '0.45rem',
+            borderBottom: '1px solid #e2e8f0',
+            paddingBottom: '0.65rem',
+          }}
+        >
           {[
             { id: 'all', label: 'All Requests', count: stats.total },
-            { id: 'pending', label: 'Pending Review', count: stats.pending },
+            { id: 'pending', label: 'Pending', count: stats.pending },
             { id: 'contacted', label: 'Contacted', count: stats.contacted },
             { id: 'matched', label: 'Matched', count: stats.matched },
             { id: 'assigned', label: 'Assigned', count: stats.assigned },
@@ -477,28 +592,32 @@ export default function DashboardRequestsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 id={`filter-tab-${tab.id}`}
                 style={{
-                  padding: '0.45rem 0.95rem',
+                  padding: '0.4rem 0.85rem',
                   borderRadius: 'var(--radius-md)',
-                  fontSize: '0.85rem',
+                  fontSize: '0.825rem',
                   fontWeight: 600,
                   cursor: 'pointer',
-                  border: isActive ? '1px solid var(--primary-500)' : '1px solid transparent',
-                  backgroundColor: isActive ? 'rgba(20, 184, 166, 0.18)' : 'transparent',
-                  color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                  border: isActive ? '1px solid #0d9488' : '1px solid #cbd5e1',
+                  backgroundColor: isActive ? 'rgba(13, 148, 136, 0.12)' : '#ffffff',
+                  color: isActive ? '#0f766e' : '#475569',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.45rem',
+                  gap: '0.4rem',
                   transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
                 }}
               >
                 <span>{tab.label}</span>
                 <span
                   style={{
-                    padding: '0.15rem 0.45rem',
+                    padding: '0.1rem 0.45rem',
                     borderRadius: '9999px',
-                    fontSize: '0.725rem',
-                    backgroundColor: isActive ? 'var(--primary-600)' : 'rgba(255, 255, 255, 0.08)',
-                    color: '#ffffff',
+                    fontSize: '0.7rem',
+                    backgroundColor: isActive ? '#0d9488' : '#f1f5f9',
+                    color: isActive ? '#ffffff' : '#64748b',
+                    fontWeight: 700,
                   }}
                 >
                   {tab.count}
@@ -509,41 +628,38 @@ export default function DashboardRequestsPage() {
         </div>
 
         {/* Search & Location Select */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '260px', maxWidth: '480px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem', alignItems: 'center', justifyContent: 'space-between', width: '100%', minWidth: 0 }}>
+          <div style={{ position: 'relative', flex: '2 1 200px', minWidth: '150px' }}>
             <input
               type="text"
               id="search-requests-input"
               className="form-input"
-              placeholder="Search by Patient, Contact, Phone or Reference Code..."
+              placeholder="Search Patient, Phone or Code..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ paddingLeft: '2.5rem', fontSize: '0.875rem' }}
+              style={{ paddingLeft: '2.3rem', fontSize: '0.825rem', width: '100%', boxSizing: 'border-box', height: '38px' }}
             />
             <svg
-              width="16"
-              height="16"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="var(--text-muted)"
               strokeWidth="2"
-              style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }}
+              style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)' }}
             >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <label htmlFor="district-filter-select" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-              District:
-            </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: '1 1 140px', minWidth: '130px' }}>
             <select
               id="district-filter-select"
               className="form-select"
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
-              style={{ minWidth: '180px', fontSize: '0.85rem', padding: '0.5rem 0.85rem' }}
+              style={{ width: '100%', fontSize: '0.825rem', padding: '0.45rem 0.65rem', height: '38px' }}
             >
               {KERALA_DISTRICTS.map((d) => (
                 <option key={d} value={d}>
@@ -571,7 +687,7 @@ export default function DashboardRequestsPage() {
         ) : filteredRequests.length === 0 ? (
           <div style={{ padding: '3.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📋</div>
-            <h3 style={{ fontSize: '1.25rem', color: '#ffffff', marginBottom: '0.4rem' }}>
+            <h3 style={{ fontSize: '1.25rem', color: '#0f172a', marginBottom: '0.4rem' }}>
               No Care Requests Found
             </h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '420px', margin: '0 auto 1.5rem' }}>
@@ -584,8 +700,10 @@ export default function DashboardRequestsPage() {
             </Link>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+          <>
+            {/* Desktop Table View */}
+            <div className="desktop-only" style={{ overflowX: 'auto', width: '100%' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
               <thead>
                 <tr
                   style={{
@@ -612,7 +730,6 @@ export default function DashboardRequestsPage() {
                   const timeAgoMinutes = Math.floor(
                     (Date.now() - new Date(req.createdAt).getTime()) / (1000 * 60)
                   );
-                  const isSlaBreached = req.status === 'pending' && timeAgoMinutes > 60;
 
                   return (
                     <tr
@@ -643,27 +760,6 @@ export default function DashboardRequestsPage() {
                             ? `${timeAgoMinutes}m ago`
                             : `${Math.floor(timeAgoMinutes / 60)}h ago`}
                         </span>
-                        {req.status === 'pending' && (
-                          <div style={{ marginTop: '0.35rem' }}>
-                            <span
-                              style={{
-                                fontSize: '0.675rem',
-                                padding: '0.15rem 0.4rem',
-                                borderRadius: '4px',
-                                backgroundColor: isSlaBreached
-                                  ? 'rgba(239, 68, 68, 0.15)'
-                                  : 'rgba(245, 158, 11, 0.15)',
-                                color: isSlaBreached ? '#f87171' : '#fbbf24',
-                                border: isSlaBreached
-                                  ? '1px solid rgba(239, 68, 68, 0.3)'
-                                  : '1px solid rgba(245, 158, 11, 0.3)',
-                                fontWeight: 600,
-                              }}
-                            >
-                              {isSlaBreached ? '⚠️ SLA Overdue' : '⏱ SLA < 60m'}
-                            </span>
-                          </div>
-                        )}
                       </td>
 
                       {/* Patient Details */}
@@ -676,21 +772,6 @@ export default function DashboardRequestsPage() {
                             </span>
                           ) : null}
                         </div>
-                        {req.patientCondition && (
-                          <div
-                            style={{
-                              fontSize: '0.775rem',
-                              color: 'var(--text-secondary)',
-                              marginTop: '0.25rem',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                            title={req.patientCondition}
-                          >
-                            {req.patientCondition}
-                          </div>
-                        )}
                         <div style={{ marginTop: '0.3rem', display: 'flex', gap: '0.35rem' }}>
                           <span
                             style={{
@@ -736,20 +817,15 @@ export default function DashboardRequestsPage() {
 
                       {/* Location */}
                       <td style={{ padding: '1rem 1.25rem', verticalAlign: 'top' }}>
-                        <div style={{ fontWeight: 500, color: '#ffffff' }}>
-                          {req.district}
+                        <div style={{ fontWeight: 500, color: '#0f172a' }}>
+                          {formatLocation(req.locality, req.district)}
                         </div>
-                        {req.locality && (
-                          <div style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                            {req.locality}
-                          </div>
-                        )}
                       </td>
 
                       {/* Family Contact */}
                       <td style={{ padding: '1rem 1.25rem', verticalAlign: 'top' }}>
-                        <div style={{ fontWeight: 500, color: '#ffffff' }}>
-                          {req.contactName}
+                        <div style={{ fontWeight: 500, color: '#0f172a' }}>
+                          {req.contactName} ({formatRelationship(req.relationship)})
                         </div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                           {req.phone}
@@ -850,7 +926,212 @@ export default function DashboardRequestsPage() {
               </tbody>
             </table>
           </div>
-        )}
+
+          {/* Mobile Touch Cards Feed */}
+          <div
+            className="show-on-mobile-block"
+            id="mobile-requests-feed"
+            style={{ padding: '0.85rem 0.85rem 5.5rem 0.85rem', width: '100%', minWidth: 0, boxSizing: 'border-box' }}
+          >
+            {filteredRequests.map((req) => {
+              const cfg = STATUS_CONFIG[req.status] || STATUS_CONFIG['pending'];
+              const timeAgoMinutes = Math.floor(
+                (Date.now() - new Date(req.createdAt).getTime()) / (1000 * 60)
+              );
+              return (
+                <div
+                  key={`mobile-${req.id}`}
+                  id={`mobile-request-card-${req.referenceId}`}
+                  className="glass-card"
+                  style={{
+                    padding: '1rem',
+                    borderRadius: 'var(--radius-lg)',
+                    border: `1px solid ${cfg.border}`,
+                    backgroundColor: '#ffffff',
+                    marginBottom: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  {/* Header: Ref ID, Timestamp & Status pill */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0, overflow: 'hidden' }}>
+                      <span
+                        style={{ fontFamily: 'monospace', fontWeight: 700, color: '#0d9488', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                        title={req.referenceId}
+                      >
+                        {formatRefId(req.referenceId)}
+                      </span>
+                      <span style={{ fontSize: '0.725rem', color: '#64748b', whiteSpace: 'nowrap' }}>
+                        • {timeAgoMinutes < 60
+                          ? `${timeAgoMinutes}m ago`
+                          : `${Math.floor(timeAgoMinutes / 60)}h ago`}
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: '0.25rem 0.6rem',
+                        borderRadius: '9999px',
+                        backgroundColor: cfg.bg,
+                        border: `1px solid ${cfg.border}`,
+                        color: cfg.color,
+                        fontSize: '0.725rem',
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: cfg.dot }} />
+                      {cfg.label}
+                    </span>
+                  </div>
+
+                  {/* Patient & Care Need */}
+                  <div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+                      {req.patientName} {req.patientAge ? `(${req.patientAge}y, ${req.patientGender})` : ''}
+                    </div>
+                    <div style={{ fontSize: '0.825rem', color: '#0f766e', marginTop: '0.2rem', fontWeight: 600 }}>
+                      {(SERVICE_LABELS[req.serviceType] || req.serviceType)} • {(DURATION_LABELS[req.duration] || req.duration)}
+                    </div>
+                  </div>
+
+                  {/* Location & Contact Info */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem',
+                      fontSize: '0.8rem',
+                      color: '#475569',
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      padding: '0.6rem 0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span>📍</span>
+                      <span style={{ color: '#0f172a', fontWeight: 600 }}>{formatLocation(req.locality, req.district)}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span>👤</span>
+                      <span>{req.contactName} ({formatRelationship(req.relationship)}) • {req.phone}</span>
+                    </div>
+                  </div>
+
+                  {/* 1-Tap Action Buttons: Direct Phone Call & WhatsApp */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    <a
+                      href={`tel:${req.phone.replace(/[^0-9+]/g, '')}`}
+                      id={`mobile-call-${req.referenceId}`}
+                      style={{
+                        padding: '0.55rem',
+                        fontSize: '0.825rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        color: '#0369a1',
+                        backgroundColor: 'rgba(2, 132, 199, 0.12)',
+                        border: '1px solid rgba(2, 132, 199, 0.35)',
+                        borderRadius: 'var(--radius-md)',
+                        textDecoration: 'none',
+                        minHeight: '44px',
+                      }}
+                    >
+                      <span>📞 Call Contact</span>
+                    </a>
+
+                    <a
+                      href={`https://wa.me/${req.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(
+                        req.contactName
+                      )}%2C%20this%20is%20the%20Nurse%20Coordinator%20regarding%20your%20care%20request%20(${
+                        req.referenceId
+                      }).`}
+                      target="_blank"
+                      rel="noreferrer"
+                      id={`mobile-wa-${req.referenceId}`}
+                      style={{
+                        padding: '0.55rem',
+                        fontSize: '0.825rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        color: '#ffffff',
+                        backgroundColor: '#16a34a',
+                        border: '1px solid #22c55e',
+                        borderRadius: 'var(--radius-md)',
+                        textDecoration: 'none',
+                        minHeight: '44px',
+                        boxShadow: '0 2px 8px rgba(34, 197, 94, 0.25)',
+                      }}
+                    >
+                      <span>💬 Chat on WhatsApp</span>
+                    </a>
+                  </div>
+
+                  {/* Secondary Actions: Details & Matching */}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => setSelectedRequest(req)}
+                      id={`mobile-details-${req.referenceId}`}
+                      className="btn-secondary"
+                      style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', minHeight: '40px' }}
+                    >
+                      View Details & History
+                    </button>
+
+                    {req.status === 'pending' && (
+                      <button
+                        onClick={() => handleUpdateStatus(req.id, 'contacted')}
+                        disabled={updatingId === req.id}
+                        className="btn-primary"
+                        id={`mobile-contacted-${req.referenceId}`}
+                        style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', minHeight: '40px' }}
+                      >
+                        Mark Contacted
+                      </button>
+                    )}
+
+                    {(req.status === 'contacted' || req.status === 'matched') && (
+                      <Link
+                        href={`/dashboard/matching?requestId=${req.id}&service=${req.serviceType}&district=${encodeURIComponent(
+                          req.district
+                        )}`}
+                        className="btn-primary"
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem',
+                          fontSize: '0.8rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.3rem',
+                          minHeight: '40px',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <span>⚡ Match Nurse</span>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
       </div>
 
       {/* Details Slide-over Drawer */}
@@ -872,24 +1153,25 @@ export default function DashboardRequestsPage() {
               width: '100%',
               maxWidth: '540px',
               height: '100%',
-              backgroundColor: 'var(--bg-card)',
-              borderLeft: '1px solid var(--border-card)',
+              backgroundColor: '#ffffff',
+              borderLeft: '1px solid #e2e8f0',
               padding: '2rem',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
               gap: '1.5rem',
+              boxShadow: '-10px 0 30px rgba(15, 23, 42, 0.1)',
             }}
             onClick={(e) => e.stopPropagation()}
             className="animate-fade-in"
           >
             {/* Drawer Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
               <div>
-                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--primary-400)', fontSize: '0.9rem' }}>
+                <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--primary-600)', fontSize: '0.9rem' }}>
                   {selectedRequest.referenceId}
                 </span>
-                <h2 style={{ fontSize: '1.4rem', color: '#ffffff', marginTop: '0.2rem' }}>
+                <h2 style={{ fontSize: '1.4rem', color: '#0f172a', marginTop: '0.2rem' }}>
                   {selectedRequest.patientName}
                 </h2>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -899,12 +1181,18 @@ export default function DashboardRequestsPage() {
               <button
                 onClick={() => setSelectedRequest(null)}
                 style={{
-                  background: 'transparent',
+                  background: '#f1f5f9',
                   border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
                   color: 'var(--text-muted)',
-                  fontSize: '1.5rem',
+                  fontSize: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   cursor: 'pointer',
-                  padding: '0.25rem',
+                  padding: 0,
                 }}
               >
                 &times;
@@ -919,13 +1207,13 @@ export default function DashboardRequestsPage() {
                 justifyContent: 'space-between',
                 padding: '0.85rem 1rem',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
               }}
             >
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status</div>
-                <div style={{ fontWeight: 600, color: STATUS_CONFIG[selectedRequest.status]?.color || '#ffffff' }}>
+                <div style={{ fontWeight: 600, color: STATUS_CONFIG[selectedRequest.status]?.color || '#0f172a' }}>
                   {STATUS_CONFIG[selectedRequest.status]?.label || selectedRequest.status}
                 </div>
               </div>
@@ -954,33 +1242,33 @@ export default function DashboardRequestsPage() {
 
             {/* Clinical & Care Requirements */}
             <div>
-              <h4 style={{ fontSize: '0.9rem', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.75rem' }}>
+              <h4 style={{ fontSize: '0.9rem', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.75rem' }}>
                 Care Program & Requirements
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.875rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Service:</span>
-                  <strong style={{ color: '#ffffff' }}>{SERVICE_LABELS[selectedRequest.serviceType] || selectedRequest.serviceType}</strong>
+                  <strong style={{ color: '#0f172a' }}>{SERVICE_LABELS[selectedRequest.serviceType] || selectedRequest.serviceType}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Shift / Schedule:</span>
-                  <strong style={{ color: 'var(--primary-400)' }}>{DURATION_LABELS[selectedRequest.duration] || selectedRequest.duration}</strong>
+                  <strong style={{ color: 'var(--primary-600)' }}>{DURATION_LABELS[selectedRequest.duration] || selectedRequest.duration}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Start Date:</span>
-                  <span style={{ color: '#ffffff' }}>{selectedRequest.startDate}</span>
+                  <span style={{ color: '#0f172a' }}>{selectedRequest.startDate}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Gender Preference:</span>
-                  <span style={{ color: '#ffffff', textTransform: 'capitalize' }}>{selectedRequest.genderPreference}</span>
+                  <span style={{ color: '#0f172a', textTransform: 'capitalize' }}>{selectedRequest.genderPreference}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Mobility Status:</span>
-                  <span style={{ color: '#ffffff', textTransform: 'capitalize' }}>{selectedRequest.mobilityStatus}</span>
+                  <span style={{ color: '#0f172a', textTransform: 'capitalize' }}>{selectedRequest.mobilityStatus}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Medical Equipment:</span>
-                  <span style={{ color: selectedRequest.medicalEquipment !== 'none' ? '#f43f5e' : 'var(--text-secondary)' }}>
+                  <span style={{ color: selectedRequest.medicalEquipment !== 'none' ? '#dc2626' : 'var(--text-secondary)' }}>
                     {selectedRequest.medicalEquipment || 'None'}
                   </span>
                 </div>
@@ -989,11 +1277,11 @@ export default function DashboardRequestsPage() {
 
             {/* Clinical Condition Notes */}
             {selectedRequest.patientCondition && (
-              <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '0.35rem', fontWeight: 600 }}>
+              <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: '0.775rem', color: '#0d9488', marginBottom: '0.35rem', fontWeight: 700 }}>
                   PATIENT CONDITION & DIAGNOSIS
                 </div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5, margin: 0 }}>
+                <p style={{ color: '#334155', fontSize: '0.875rem', lineHeight: 1.5, margin: 0 }}>
                   {selectedRequest.patientCondition}
                 </p>
               </div>
@@ -1001,11 +1289,11 @@ export default function DashboardRequestsPage() {
 
             {/* Special Instructions Notes */}
             {selectedRequest.notes && (
-              <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '0.35rem', fontWeight: 600 }}>
+              <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: '0.775rem', color: '#0d9488', marginBottom: '0.35rem', fontWeight: 700 }}>
                   SPECIAL CARE INSTRUCTIONS
                 </div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5, margin: 0 }}>
+                <p style={{ color: '#334155', fontSize: '0.875rem', lineHeight: 1.5, margin: 0 }}>
                   {selectedRequest.notes}
                 </p>
               </div>
@@ -1013,21 +1301,21 @@ export default function DashboardRequestsPage() {
 
             {/* Family Contact & WhatsApp */}
             <div>
-              <h4 style={{ fontSize: '0.9rem', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.75rem' }}>
+              <h4 style={{ fontSize: '0.9rem', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.75rem' }}>
                 Primary Family Contact
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.875rem', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Name:</span>
-                  <strong style={{ color: '#ffffff' }}>{selectedRequest.contactName} ({selectedRequest.relationship})</strong>
+                  <strong style={{ color: '#0f172a' }}>{selectedRequest.contactName} ({formatRelationship(selectedRequest.relationship)})</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Phone / Mobile:</span>
-                  <strong style={{ color: 'var(--primary-400)' }}>{selectedRequest.phone}</strong>
+                  <strong style={{ color: 'var(--primary-600)' }}>{selectedRequest.phone}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Location:</span>
-                  <span style={{ color: '#ffffff' }}>{selectedRequest.district}</span>
+                  <span style={{ color: '#0f172a' }}>{formatLocation(selectedRequest.locality, selectedRequest.district)}</span>
                 </div>
               </div>
 
@@ -1047,9 +1335,9 @@ export default function DashboardRequestsPage() {
             </div>
 
             {/* Customer CRM Integration */}
-            <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
-                CUSTOMER CRM RECORD
+            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.5rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Customer CRM Record
               </div>
               {selectedRequest.customerId || selectedRequest.customer?.id ? (
                 <Link
@@ -1060,9 +1348,9 @@ export default function DashboardRequestsPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.5rem',
-                    backgroundColor: 'rgba(20, 184, 166, 0.15)',
-                    border: '1px solid rgba(20, 184, 166, 0.4)',
-                    color: '#2dd4bf',
+                    backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                    border: '1px solid rgba(13, 148, 136, 0.35)',
+                    color: '#0f766e',
                     padding: '0.65rem',
                     borderRadius: '8px',
                     fontSize: '0.85rem',
@@ -1091,9 +1379,9 @@ export default function DashboardRequestsPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.5rem',
-                    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                    border: '1px solid rgba(56, 189, 248, 0.4)',
-                    color: '#38bdf8',
+                    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                    border: '1px solid rgba(2, 132, 199, 0.3)',
+                    color: '#0284c7',
                     padding: '0.65rem',
                     borderRadius: '8px',
                     fontSize: '0.85rem',
@@ -1109,18 +1397,17 @@ export default function DashboardRequestsPage() {
             {/* Smart Matching Engine CTA */}
             <div
               style={{
-                marginTop: 'auto',
                 padding: '1.25rem',
                 borderRadius: 'var(--radius-lg)',
                 backgroundColor: 'rgba(20, 184, 166, 0.08)',
-                border: '1px solid rgba(20, 184, 166, 0.3)',
+                border: '1px solid rgba(20, 184, 166, 0.25)',
                 textAlign: 'center',
               }}
             >
-              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.35rem' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.35rem' }}>
                 Ready to Match a Caregiver?
               </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '1rem' }}>
+              <p style={{ color: '#475569', fontSize: '0.825rem', marginBottom: '1rem' }}>
                 Run spatial proximity matching to find certified attendants in {selectedRequest.district}.
               </p>
               <Link

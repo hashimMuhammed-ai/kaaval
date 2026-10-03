@@ -315,10 +315,11 @@ export class WhatsAppService {
     components: any[] = []
   ): Promise<SendWhatsAppResponse> {
     const cleanTo = this.normalizePhoneNumber(to);
+    console.log(`[WhatsApp API Outgoing] 📤 Sending Template "${templateName}" (${languageCode}) to ${cleanTo}...`);
 
     if (this.config.isDevMockMode || !this.config.isConfigured()) {
       const mockId = `wamid.MOCK_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      this.logger.log(
+      console.log(
         `[WhatsApp Mock Mode] Sent template "${templateName}" to ${cleanTo} (ID: ${mockId})\nPayload components: ${JSON.stringify(
           components
         )}`
@@ -353,7 +354,18 @@ export class WhatsAppService {
       });
 
       const data = await res.json();
+      console.log(`[WhatsApp API Response] 📥 Template "${templateName}" to ${cleanTo}:`, {
+        status: res.status,
+        ok: res.ok,
+        messageId: data?.messages?.[0]?.id,
+        contacts: data?.contacts,
+      });
+
       if (!res.ok) {
+        console.error(`[WhatsApp API Error] ❌ Meta Cloud API rejected template "${templateName}" to ${cleanTo}:`, {
+          status: res.status,
+          error: data?.error,
+        });
         throw new Error(data?.error?.message || `Meta API error (${res.status})`);
       }
 
@@ -367,6 +379,7 @@ export class WhatsAppService {
         mode: 'live',
       };
     } catch (err: any) {
+      console.error(`[WhatsApp API Error] ❌ Exception sending template "${templateName}" to ${cleanTo}:`, err.message);
       this.logger.error(`Failed to send WhatsApp template "${templateName}": ${err.message}`, err.stack);
       return {
         success: false,
@@ -382,10 +395,13 @@ export class WhatsAppService {
    */
   async sendTextMessage(to: string, text: string): Promise<SendWhatsAppResponse> {
     const cleanTo = this.normalizePhoneNumber(to);
+    console.log(`[WhatsApp API Outgoing] 📤 Sending Text Message to ${cleanTo} (${text.length} chars):`, {
+      preview: text.length > 80 ? `${text.substring(0, 80)}...` : text,
+    });
 
     if (this.config.isDevMockMode || !this.config.isConfigured()) {
       const mockId = `wamid.MOCK_TXT_${Date.now()}`;
-      this.logger.log(`[WhatsApp Mock Mode] Sent text to ${cleanTo}: "${text}"`);
+      console.log(`[WhatsApp Mock Mode] Sent text to ${cleanTo}: "${text}"`);
       return {
         success: true,
         messageId: mockId,
@@ -415,7 +431,18 @@ export class WhatsAppService {
       });
 
       const data = await res.json();
+      console.log(`[WhatsApp API Response] 📥 Text message to ${cleanTo}:`, {
+        status: res.status,
+        ok: res.ok,
+        messageId: data?.messages?.[0]?.id,
+        contacts: data?.contacts,
+      });
+
       if (!res.ok) {
+        console.error(`[WhatsApp API Error] ❌ Meta Cloud API rejected text message to ${cleanTo}:`, {
+          status: res.status,
+          error: data?.error,
+        });
         throw new Error(data?.error?.message || `Meta API error (${res.status})`);
       }
 
@@ -426,6 +453,7 @@ export class WhatsAppService {
         mode: 'live',
       };
     } catch (err: any) {
+      console.error(`[WhatsApp API Error] ❌ Exception sending text to ${cleanTo}:`, err.message);
       this.logger.error(`Failed to send WhatsApp text: ${err.message}`, err.stack);
       return {
         success: false,
@@ -441,22 +469,31 @@ export class WhatsAppService {
    */
   verifyWebhookSignature(rawBody: string, signatureHeader?: string): boolean {
     if (!this.config.appSecret) {
-      // In dev or when secret not configured, log warning
+      console.log('[WhatsApp Signature] No WHATSAPP_APP_SECRET configured; signature check bypassed.');
       return true;
     }
-    if (!signatureHeader) return false;
+    if (!signatureHeader) {
+      console.warn('[WhatsApp Signature] Missing x-hub-signature-256 header.');
+      return false;
+    }
 
     try {
       const [algo, signature] = signatureHeader.split('=');
-      if (algo !== 'sha256') return false;
+      if (algo !== 'sha256') {
+        console.warn(`[WhatsApp Signature] Unsupported signature algorithm: "${algo}". Expected sha256.`);
+        return false;
+      }
 
       const expected = crypto
         .createHmac('sha256', this.config.appSecret)
         .update(rawBody)
         .digest('hex');
 
-      return crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'));
-    } catch {
+      const matches = crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'));
+      console.log('[WhatsApp Signature] Verification result:', { matched: matches });
+      return matches;
+    } catch (err: any) {
+      console.error('[WhatsApp Signature] Exception validating signature:', err.message);
       return false;
     }
   }
@@ -465,7 +502,10 @@ export class WhatsAppService {
    * Process inbound Meta Webhook Event (message statuses, inbound texts)
    */
   async processWebhookEvent(payload: any): Promise<{ handled: boolean; eventType: string }> {
+    console.log('[WhatsApp Event] Processing payload with object:', payload?.object);
+
     if (payload.object !== 'whatsapp_business_account') {
+      console.warn('[WhatsApp Event] Ignored event; object is not whatsapp_business_account:', payload.object);
       return { handled: false, eventType: 'unknown' };
     }
 
@@ -476,12 +516,30 @@ export class WhatsAppService {
         if (change.field === 'messages') {
           const value = change.value;
 
+          // Check for Meta system/webhook-level errors
+          if (value.errors && value.errors.length > 0) {
+            console.error('[WhatsApp Webhook Error] ❌ Meta reported errors:', JSON.stringify(value.errors, null, 2));
+          }
+
           // 1. Message Delivery Status Receipts
           if (value.statuses && value.statuses.length > 0) {
             for (const status of value.statuses) {
-              this.logger.log(
-                `WhatsApp delivery receipt: ID ${status.id} -> ${status.status} (recipient: ${status.recipient_id})`
+              console.log(
+                `[WhatsApp Delivery Status] 📋 ID: ${status.id} | Status: ${status.status.toUpperCase()} | Recipient: ${status.recipient_id}`,
+                {
+                  timestamp: status.timestamp,
+                  conversation: status.conversation || null,
+                  pricing: status.pricing || null,
+                  errors: status.errors || null,
+                }
               );
+
+              if (status.status === 'failed') {
+                console.error(
+                  `[WhatsApp Delivery Failed] ❌ Delivery FAILED for message ${status.id} to recipient ${status.recipient_id}! Reason from Meta:`,
+                  JSON.stringify(status.errors, null, 2)
+                );
+              }
             }
             return { handled: true, eventType: 'status_receipt' };
           }
@@ -490,39 +548,65 @@ export class WhatsAppService {
           if (value.messages && value.messages.length > 0) {
             for (const msg of value.messages) {
               const from = msg.from;
-              const text = msg.text?.body || msg.interactive?.button_reply?.title || '';
-              this.logger.log(
-                `Inbound WhatsApp message from ${from}: type=${msg.type} body=${text}`
+              const text =
+                msg.text?.body ||
+                msg.interactive?.button_reply?.title ||
+                msg.interactive?.list_reply?.title ||
+                msg.interactive?.button_reply?.id ||
+                msg.button?.text ||
+                msg.button?.payload ||
+                '';
+
+              console.log(
+                `[WhatsApp Inbound Message] 💬 Received from ${from} | Type: ${msg.type} | ID: ${msg.id} | Content: "${text}"`
               );
 
               // 2a. Auto-record rating & comment if customer replied to rating request
               let handledByFeedback = false;
               if (this.feedbackService && text) {
                 try {
+                  console.log(`[WhatsApp Feedback] Checking if message from ${from} matches rating request...`);
                   const ratingResult = await this.feedbackService.recordInboundWhatsAppRating(
                     from,
                     text,
                     msg.id
                   );
                   if (ratingResult.matched && ratingResult.thankYouMessage) {
+                    console.log(`[WhatsApp Feedback] Rating recorded! Replying with thank you message to ${from}`);
                     await this.sendTextMessage(from, ratingResult.thankYouMessage);
                     handledByFeedback = true;
                   }
                 } catch (err: any) {
-                  this.logger.warn(`Could not process rating from inbound message: ${err.message}`);
+                  console.warn(`[WhatsApp Feedback] Could not process rating: ${err.message}`);
                 }
               }
 
               // 2b. Conversational lead intake flow (Phase 9, Point 1)
               if (!handledByFeedback && this.intakeService && text) {
                 try {
+                  console.log(`[WhatsApp Auto-Reply] Invoking WhatsAppIntakeService for ${from}: "${text}"`);
                   const intakeReply = await this.intakeService.handleInboundMessage(from, text);
+                  console.log(
+                    `[WhatsApp Auto-Reply] Intake service generated reply (${intakeReply?.length || 0} chars). Sending text message to ${from}...`
+                  );
                   if (intakeReply) {
-                    await this.sendTextMessage(from, intakeReply);
+                    const sendRes = await this.sendTextMessage(from, intakeReply);
+                    console.log(`[WhatsApp Auto-Reply] Auto-reply dispatch result for ${from}:`, {
+                      success: sendRes.success,
+                      messageId: sendRes.messageId,
+                      mode: sendRes.mode,
+                      error: sendRes.error,
+                    });
                   }
                 } catch (err: any) {
-                  this.logger.warn(`Could not process intake from inbound message: ${err.message}`);
+                  console.error(`[WhatsApp Auto-Reply] ❌ Error in conversational intake auto-reply for ${from}:`, err.message, err.stack);
                 }
+              } else if (!handledByFeedback && !text) {
+                console.warn(`[WhatsApp Inbound Message] ⚠️ Message from ${from} had no text (type: ${msg.type}). Sending fallback guidance.`);
+                await this.sendTextMessage(
+                  from,
+                  'Thank you for contacting CareKerala Healthcare! 👋 Please send a text message or reply with 1-6 to begin your caregiver enquiry.'
+                );
               }
             }
             return { handled: true, eventType: 'inbound_message' };
@@ -539,7 +623,10 @@ export class WhatsAppService {
    * e.g., '+91 98470 12345' -> '919847012345'
    */
   normalizePhoneNumber(phone: string): string {
-    const digits = phone.replace(/[^0-9]/g, '');
+    let digits = phone.replace(/[^0-9]/g, '');
+    if (digits.length === 11 && digits.startsWith('0')) {
+      digits = digits.substring(1);
+    }
     if (digits.length === 10) {
       // Default to India (+91)
       return `91${digits}`;
@@ -675,8 +762,8 @@ export class WhatsAppService {
       ? `${dto.patientName} (${dto.patientAge}y)`
       : dto.patientName;
 
-    this.logger.log(
-      `Triggering instant WhatsApp alert for Enquiry ${dto.referenceId} -> Agency Owner (${targetOwnerPhone}) [isWhatsAppLead=${isWhatsAppLead}]`
+    console.log(
+      `[WhatsApp Enquiry Alert] Triggering alert for Enquiry ${dto.referenceId} -> Agency Owner (${targetOwnerPhone}) [isWhatsAppLead=${isWhatsAppLead}]`
     );
 
     // Build components for official Meta Cloud API template: agency_new_enquiry_alert
@@ -709,6 +796,7 @@ export class WhatsAppService {
       'en_US',
       ownerComponents
     );
+    console.log(`[WhatsApp Enquiry Alert] Owner alert dispatch result:`, ownerAlert);
 
     // Customer acknowledgement dispatch (skipped if user completed conversation directly in WhatsApp bot)
     let customerAck: SendWhatsAppResponse | undefined;
@@ -743,6 +831,7 @@ export class WhatsAppService {
         'en_US',
         customerComponents
       );
+      console.log(`[WhatsApp Enquiry Alert] Customer acknowledgement dispatch result:`, customerAck);
     }
 
     // Web Push alert to agency admin PWA devices

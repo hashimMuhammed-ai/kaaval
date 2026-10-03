@@ -42,6 +42,13 @@ export class TenantSessionGuard implements CanActivate {
       return true;
     }
 
+    // Direct path bypass for static health check endpoints
+    const rawPath = request.originalUrl || request.url || request.path || '';
+    const cleanPath = typeof rawPath === 'string' ? rawPath.split('?')[0].toLowerCase().replace(/\/+$/, '') : '';
+    if (cleanPath === '/health' || cleanPath === '/api/health') {
+      return true;
+    }
+
     const sessionContext: TenantSessionContext = RlsContextHelper.extractContext(request);
     request.tenantContext = sessionContext;
 

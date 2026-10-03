@@ -21,9 +21,18 @@ export class StorageService implements IStorageService {
   private readonly s3Endpoint?: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.storageDriver =
-      (this.configService.get<string>('STORAGE_DRIVER')?.toLowerCase() as 'local' | 's3') ||
-      'local';
+    const rawR2AccountId = this.configService.get<string>('R2_ACCOUNT_ID')?.trim();
+    const r2AccountId = rawR2AccountId
+      ? rawR2AccountId.replace(/^https?:\/\//i, '').replace(/\.r2\.cloudflarestorage\.com.*$/i, '')
+      : undefined;
+    const r2BucketName = this.configService.get<string>('R2_BUCKET_NAME');
+    const configuredDriver = this.configService.get<string>('STORAGE_DRIVER')?.toLowerCase();
+
+    if (configuredDriver === 'r2' || configuredDriver === 's3' || r2BucketName || r2AccountId) {
+      this.storageDriver = 's3';
+    } else {
+      this.storageDriver = (configuredDriver as 'local' | 's3') || 'local';
+    }
 
     this.baseUploadDir = path.resolve(
       process.cwd(),
@@ -31,14 +40,21 @@ export class StorageService implements IStorageService {
     );
 
     this.appDomain = this.configService.get<string>('APP_DOMAIN') || 'localhost:3000';
-    this.s3Bucket = this.configService.get<string>('AWS_S3_BUCKET');
-    this.s3Endpoint = this.configService.get<string>('AWS_S3_ENDPOINT');
+    this.s3Bucket = r2BucketName || this.configService.get<string>('AWS_S3_BUCKET');
+    this.s3Endpoint = r2AccountId
+      ? `https://${r2AccountId}.r2.cloudflarestorage.com`
+      : this.configService.get<string>('AWS_S3_ENDPOINT');
 
     if (this.storageDriver === 'local') {
       this.ensureDirectoryExists(this.baseUploadDir);
       this.logger.log(`Initialized Local Object Storage Driver at ${this.baseUploadDir}`);
     } else {
-      this.logger.log(`Initialized S3-Compatible Object Storage Driver for bucket: ${this.s3Bucket || 'default-bucket'}`);
+      const endpointDesc = r2AccountId ? `Cloudflare R2 (${this.s3Endpoint})` : (this.s3Endpoint || 'AWS S3');
+      this.logger.log(
+        `Initialized S3-Compatible Object Storage Driver pointing at ${endpointDesc} for bucket: ${
+          this.s3Bucket || 'default-bucket'
+        }`
+      );
     }
   }
 
@@ -137,6 +153,14 @@ export class StorageService implements IStorageService {
    */
   resolveFileUrl(fileKey: string, caregiverId: string, documentId?: string): string {
     if (this.storageDriver === 's3' && this.s3Bucket) {
+      const r2PublicUrl = this.configService.get<string>('R2_PUBLIC_URL');
+      if (r2PublicUrl) {
+        return `${r2PublicUrl.replace(/\/$/, '')}/${fileKey}`;
+      }
+      const isR2 = Boolean(this.configService.get<string>('R2_ACCOUNT_ID'));
+      if (isR2 && this.s3Endpoint) {
+        return `${this.s3Endpoint}/${this.s3Bucket}/${fileKey}`;
+      }
       const base = this.s3Endpoint || `https://${this.s3Bucket}.s3.amazonaws.com`;
       return `${base}/${fileKey}`;
     }

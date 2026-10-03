@@ -278,4 +278,223 @@ describe('Smart Matching UI Component', () => {
       expect(screen.getByRole('button', { name: /Expand Radius to 50 km/i })).toBeTruthy();
     });
   });
+
+  it('should support touch-friendly radius range slider and mobile 1-tap call/whatsapp actions', async () => {
+    render(<SmartMatchingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunitha Kumari')).toBeTruthy();
+    });
+
+    // Check thumb-friendly range slider
+    const radiusSlider = document.getElementById('filter-radius-slider') as HTMLInputElement;
+    expect(radiusSlider).toBeTruthy();
+    expect(radiusSlider.type).toBe('range');
+
+    fireEvent.change(radiusSlider, { target: { value: '50' } });
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        expect.stringContaining('radiusKm=50')
+      );
+    });
+
+    // Check 1-tap direct phone call and WhatsApp actions
+    const callLink = document.getElementById('mobile-match-call-cg-1');
+    expect(callLink).toBeTruthy();
+    expect(callLink?.getAttribute('href')).toBe('tel:+919847111222');
+
+    const waLink = document.getElementById('mobile-match-wa-cg-1');
+    expect(waLink).toBeTruthy();
+    expect(waLink?.getAttribute('href')).toContain('wa.me/919847111222');
+
+    // Check 1-tap assign button
+    const assignBtn = document.getElementById('btn-assign-cg-1');
+    expect(assignBtn).toBeTruthy();
+  });
+
+  it('should assign caregiver to patient creating an assignment and updating customer profile when customerId is present', async () => {
+    mockSearchParams = new URLSearchParams('customerId=cust-devaki');
+    window.confirm = jest.fn().mockReturnValue(true);
+
+    (apiFetch as jest.Mock).mockImplementation(async (endpoint: string, options?: any) => {
+      if (endpoint === '/customers/cust-devaki') {
+        if (options?.method === 'PATCH') {
+          return { data: { id: 'cust-devaki', assignedCaregiverId: 'cg-1', status: 'active' } };
+        }
+        return {
+          data: {
+            id: 'cust-devaki',
+            referenceId: 'CUST-2026-001',
+            patientName: 'Devaki Amma',
+            district: 'Ernakulam',
+            locality: 'Kakkanad',
+            serviceType: 'Elderly Care',
+            status: 'pending',
+            assignments: [],
+          },
+        };
+      }
+      if (endpoint === '/assignments') {
+        return { success: true, data: { id: 'asgn-new-1' } };
+      }
+      if (endpoint.startsWith('/matching')) {
+        return mockMatchResponse;
+      }
+      return null;
+    });
+
+    render(<SmartMatchingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Devaki Amma')).toBeTruthy();
+      const assignBtns = screen.getAllByRole('button', { name: /Assign to Patient/i });
+      expect(assignBtns.length).toBeGreaterThan(0);
+    });
+
+    const assignBtns = screen.getAllByRole('button', { name: /Assign to Patient/i });
+    fireEvent.click(assignBtns[0]);
+
+    await waitFor(() => {
+      // 1. Verify assignment was created via POST /assignments
+      expect(apiFetch).toHaveBeenCalledWith(
+        '/assignments',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"customerId":"cust-devaki"'),
+        })
+      );
+      // 2. Verify customer was set to active via PATCH /customers
+      expect(apiFetch).toHaveBeenCalledWith(
+        '/customers/cust-devaki',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: expect.stringContaining('"assignedCaregiverId":"cg-1"'),
+        })
+      );
+    });
+  });
+
+  it('should assign caregiver to patient using replacement endpoint when customer already has an active assignment', async () => {
+    mockSearchParams = new URLSearchParams('customerId=cust-devaki');
+    window.confirm = jest.fn().mockReturnValue(true);
+
+    (apiFetch as jest.Mock).mockImplementation(async (endpoint: string, options?: any) => {
+      if (endpoint === '/customers/cust-devaki') {
+        return {
+          data: {
+            id: 'cust-devaki',
+            referenceId: 'CUST-2026-001',
+            patientName: 'Devaki Amma',
+            district: 'Ernakulam',
+            locality: 'Kakkanad',
+            serviceType: 'Elderly Care',
+            status: 'active',
+            assignedCaregiverId: 'cg-old',
+            assignments: [
+              {
+                id: 'asgn-active-99',
+                status: 'active',
+                caregiverId: 'cg-old',
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint === '/assignments/asgn-active-99/replace') {
+        return { success: true };
+      }
+      if (endpoint.startsWith('/matching')) {
+        return mockMatchResponse;
+      }
+      return null;
+    });
+
+    render(<SmartMatchingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Devaki Amma')).toBeTruthy();
+    });
+
+    const assignBtns = screen.getAllByRole('button', { name: /Assign to Patient/i });
+    fireEvent.click(assignBtns[0]);
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        '/assignments/asgn-active-99/replace',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"replacementCaregiverId":"cg-1"'),
+        })
+      );
+    });
+  });
+
+  it('should open modal and allow assigning caregiver to a registered patient from CRM when unscoped', async () => {
+    window.confirm = jest.fn().mockReturnValue(true);
+
+    (apiFetch as jest.Mock).mockImplementation(async (endpoint: string, options?: any) => {
+      if (endpoint.startsWith('/matching')) {
+        return mockMatchResponse;
+      }
+      if (endpoint === '/requests') {
+        return { data: [] };
+      }
+      if (endpoint === '/customers') {
+        return {
+          data: [
+            {
+              id: 'cust-modal-1',
+              referenceId: 'CUST-2026-888',
+              patientName: 'Kalyani Amma',
+              district: 'Ernakulam',
+              locality: 'Edappally',
+              serviceType: 'Elderly Care',
+              status: 'pending',
+              assignedCaregiverId: null,
+            },
+          ],
+        };
+      }
+      if (endpoint === '/assignments') {
+        return { success: true };
+      }
+      if (endpoint === '/customers/cust-modal-1') {
+        return { success: true };
+      }
+      return null;
+    });
+
+    render(<SmartMatchingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunitha Kumari')).toBeTruthy();
+    });
+
+    // Click "Assign Caregiver..." on Sunitha's card
+    const assignBtn = document.getElementById('btn-assign-cg-1') as HTMLButtonElement;
+    expect(assignBtn).toBeTruthy();
+    fireEvent.click(assignBtn);
+
+    // Modal opens, check that Patients tab and Kalyani Amma are rendered
+    await waitFor(() => {
+      expect(screen.getByText('Kalyani Amma')).toBeTruthy();
+      expect(screen.getByText('#CUST-2026-888')).toBeTruthy();
+    });
+
+    // Click Assign for Kalyani Amma
+    const modalAssignBtn = document.getElementById('btn-modal-assign-patient-cust-modal-1') as HTMLButtonElement;
+    expect(modalAssignBtn).toBeTruthy();
+    fireEvent.click(modalAssignBtn);
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        '/assignments',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"customerId":"cust-modal-1"'),
+        })
+      );
+    });
+  });
 });

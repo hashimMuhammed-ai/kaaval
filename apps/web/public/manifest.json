@@ -1,0 +1,53 @@
+{
+  "name": "Caregiver Agency Platform — In-Home Nursing & Caregiver Services",
+  "short_name": "Caregiver App",
+  "description": "Multi-tenant healthcare & caregiver management platform. Installable agency management and caregiver self-service portal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#14b8a6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Request a Caregiver",
+      "short_name": "New Request",
+      "description": "Submit a home care or nursing intake request",
+      "url": "/#request-form",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Staff & Caregiver Login",
+      "short_name": "Login",
+      "description": "Access the agency administrative portal",
+      "url": "/login",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+    }
+  ],
+  "categories": [
+    "medical",
+    "health",
+    "business",
+    "productivity"
+  ]
+}

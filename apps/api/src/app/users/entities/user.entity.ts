@@ -5,12 +5,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToOne,
   JoinColumn,
   Index,
   Unique,
 } from 'typeorm';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { Tenant } from '../../tenants/entities/tenant.entity';
+import { Caregiver } from '../../caregivers/entities/caregiver.entity';
 
 @Entity('users')
 @Unique('uq_users_tenant_email', ['tenantId', 'email'])
@@ -21,12 +23,15 @@ export class User {
   id: string;
 
   @Index('idx_users_tenant_id')
-  @Column({ name: 'tenant_id', type: 'uuid' })
-  tenantId: string;
+  @Column({ name: 'tenant_id', type: 'uuid', nullable: true })
+  tenantId?: string | null;
 
-  @ManyToOne(() => Tenant, (tenant) => tenant.users, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Tenant, (tenant) => tenant.users, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'tenant_id' })
-  tenant: Tenant;
+  tenant?: Tenant | null;
+
+  @OneToOne(() => Caregiver, (caregiver) => caregiver.user)
+  caregiver?: Caregiver;
 
   @Column({
     type: 'enum',

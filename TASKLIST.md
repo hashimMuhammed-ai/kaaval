@@ -2,81 +2,80 @@
 
 Each phase should be independently demoable before moving to the next.
 
-## Phase 1 — Multi-tenant Foundation
+## Phase 1 — Multi-tenant Foundation & Account Provisioning
 - [x] Nx monorepo scaffolding (NestJS API + Next.js frontend)
-- [x] Postgres schema: `tenants`, `users` with roles (owner/staff/
-      coordinator)
-- [ ] Row-Level Security policies on all tenant-scoped tables
-- [ ] JWT auth with `tenantId` + `role` claims
-- [ ] NestJS guard/interceptor to set Postgres session var per request
-- [ ] Subdomain-based tenant resolution
-- [ ] PWA shell: manifest.json, service worker, install prompt, offline
-      fallback page
+- [x] Update Postgres schema: 4 roles (`super_admin`, `owner`, `office_staff`, `caregiver`), `tenants`, `users`, and `invite_tokens` table
+- [x] Super Admin manual tenant & Owner provisioning flow (out-of-band payment confirmation, no public signup)
+- [x] Single-use, expiring invite token infrastructure for Owner/Office Staff (`invite_tokens`: token, tenant_id, role, expires_at, used_at) delivered via WhatsApp link / temporary login code
+- [x] Row-Level Security policies on all tenant-scoped tables (with self-view isolation for caregivers)
+- [x] JWT auth with `userId`, `tenantId`, and `role` claims
+- [x] NestJS guard/interceptor to set Postgres session vars per request
+- [x] Subdomain-based tenant resolution
+- [x] Public site entrypoints: "Request a Caregiver" form and login page only (no public registration UI)
+- [x] PWA shell: manifest.json, service worker, install prompt, offline fallback page
 
 ## Phase 2 — Caregiver Management
-- [ ] `caregivers` table (full profile fields per brief)
-- [ ] Status board UI: Available / Assigned / On Leave / Inactive
-- [ ] Document upload to object storage (certifications, ID proof)
-- [ ] CSV bulk-import for agencies with existing staff lists
+- [x] Combined caregiver profile + login creation: single action creating full profile data (name, phone, skills, experience, documents, etc.) AND self-service portal user account/temporary credentials
+- [x] `caregivers` table (full profile fields per brief, linked to user account)
+- [x] Status board UI: Available / Assigned / On Leave / Inactive
+- [x] Document upload to object storage (certifications, ID proof)
+- [x] CSV bulk-import for agencies with existing staff lists
 
 ## Phase 3 — Public Site + WhatsApp Enquiry
-- [ ] Public marketing pages (services list, about, contact)
-- [ ] "Request a Caregiver" form (service type, location, duration,
-      gender preference, start date, phone)
-- [ ] WhatsApp Business Cloud API setup (Meta app review, phone number
-      verification — start this early, approval can take days)
-- [ ] Instant WhatsApp notification to agency owner on form submit
-- [ ] Form submission creates a `requests` row in the admin dashboard
+- [x] Public marketing pages (services list, about, contact)
+- [x] "Request a Caregiver" form (service type, location, duration, gender preference, start date, phone)
+- [x] WhatsApp Business Cloud API setup (Meta app review, phone number verification — start this early, approval can take days)
+- [x] Instant WhatsApp notification to agency owner on form submit
+- [x] Form submission creates a `requests` row in the admin dashboard
 
 ## Phase 4 — Customer CRM
-- [ ] `customers` table linked to `requests`
-- [ ] Customer detail view: patient info, requirement, assigned
-      caregiver, status
-- [ ] Customer list view with status filter (Active / Pending)
+- [x] `customers` table linked to `requests`
+- [x] Customer detail view: patient info, requirement, assigned caregiver, status
+- [x] Customer list view with status filter (Active / Pending)
 
 ## Phase 5 — Smart Matching Engine
-- [ ] Enable PostGIS extension; geocode caregiver addresses on create
-- [ ] GiST spatial index on caregiver location
-- [ ] Matching query: location radius + gender + experience/skill +
-      availability filters
-- [ ] Match results UI showing distance, experience, availability
+- [x] Enable PostGIS extension; geocode caregiver addresses on create
+- [x] GiST spatial index on caregiver location
+- [x] Matching query: location radius + gender + experience/skill + availability filters
+- [x] Match results UI showing distance, experience, availability
 
 ## Phase 6 — Attendance + Salary
-- [ ] Check-in/check-out capture (mobile-friendly, per assignment/day)
-- [ ] Daily rate configuration per caregiver
-- [ ] Monthly calculation: days worked, gross, commission split, net
-      payout
-- [ ] Exportable monthly salary/payment report
+- [x] Check-in/check-out backend & data model (per assignment/day)
+- [x] Daily rate configuration per caregiver
+- [x] Monthly calculation: days worked, gross, commission split, net payout
+- [x] Exportable monthly salary/payment report for Owner and Office Staff
 
-## Phase 7 — Feedback Loop
-- [ ] Post-assignment-completion WhatsApp rating request
-- [ ] Store rating + optional comment linked to assignment
-- [ ] Rolling average rating + jobs-completed count per caregiver
+## Phase 7 — Caregiver Self-Service Portal
+- [x] Minimal, mobile-first PWA interface for Caregiver role (lowest privilege)
+- [x] Current assignment view (customer name, care location, schedule)
+- [x] One-tap attendance check-in / check-out (feeds attendance table)
+- [x] Read-only salary and payment history view (computed from attendance)
+- [x] Document & certification status view (uploaded documents, expiry dates)
 
-## Phase 8 — WhatsApp Lead Automation
-- [ ] Conversational intake flow (service, location, duration, patient
-      age, gender preference, start date) via WhatsApp
-- [ ] Auto-create `requests` row from completed conversation
-- [ ] Push/WhatsApp alert to admin for new auto-captured lead
+## Phase 8 — Feedback Loop
+- [x] Post-assignment-completion WhatsApp rating request
+- [x] Store rating + optional comment linked to assignment
+- [x] Rolling average rating + jobs-completed count per caregiver
 
-## Phase 9 — Replacement / Backup Flow
-- [ ] Model `assignments` as a history table with `replaced_by`
-      reference (not a single "current caregiver" pointer)
-- [ ] "Find replacement" action re-runs Phase 5 matching engine scoped to
-      the same requirement
-- [ ] SLA timer: escalate to owner via WhatsApp/push if unresolved within
-      the configured window
-- [ ] Capture absence reason (leave / quit / complaint) for context
+## Phase 9 — WhatsApp Lead Automation
+- [x] Conversational intake flow (service, location, duration, patient age, gender preference, start date) via WhatsApp
+- [x] Auto-create `requests` row from completed conversation
+- [x] Push/WhatsApp alert to admin for new auto-captured lead
 
-## Phase 10 — Owner Analytics Dashboard
-- [ ] Materialized view: occupancy rate, average time-to-fill, revenue
-      trend
-- [ ] BullMQ scheduled job to refresh the materialized view
-- [ ] Redis cache layer for dashboard queries (short TTL)
-- [ ] Dashboard UI (charts for the metrics above)
+## Phase 10 — Replacement / Backup Flow
+- [x] Model `assignments` as a history table with `replaced_by` reference (not a single "current caregiver" pointer)
+- [x] Office Staff "Find replacement" action re-running Phase 5 matching engine scoped to same requirement
+- [x] SLA timer: escalate to Owner via WhatsApp/push if unresolved within configured window
+- [x] Capture absence reason (leave / quit / complaint) for context
+
+## Phase 11 — Owner Analytics Dashboard
+- [x] Materialized view: occupancy rate, average time-to-fill, revenue trend
+- [x] BullMQ scheduled job to refresh the materialized view
+- [x] Redis cache layer for dashboard queries (short TTL)
+- [x] Dashboard UI (charts for the metrics above)
 
 ## Cross-cutting (ongoing throughout)
-- [ ] Document expiry tracking (optional — revisit if a client asks)
-- [ ] Role-based access refinement (owner/staff/coordinator visibility)
-- [ ] Subscription billing integration (Razorpay)
+- [x] Document expiry tracking
+- [ ] Four-role access refinement (Super Admin / Owner / Office Staff / Caregiver visibility & permissions)
+- [ ] Manual subscription billing & renewal tracking (Super Admin out-of-band payment recording)
 - [ ] Data encryption at rest for patient/health-related fields

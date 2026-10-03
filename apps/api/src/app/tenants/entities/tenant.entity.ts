@@ -9,6 +9,8 @@ import {
 } from 'typeorm';
 import { TenantStatus } from '../../common/enums/tenant-status.enum';
 import { User } from '../../users/entities/user.entity';
+import { InviteToken } from '../../users/entities/invite-token.entity';
+import { Caregiver } from '../../caregivers/entities/caregiver.entity';
 
 @Entity('tenants')
 export class Tenant {
@@ -46,7 +48,13 @@ export class Tenant {
   settings: Record<string, any>;
 
   @OneToMany(() => User, (user) => user.tenant)
-  users: User[];
+  users?: User[];
+
+  @OneToMany(() => InviteToken, (token) => token.tenant)
+  inviteTokens?: InviteToken[];
+
+  @OneToMany(() => Caregiver, (caregiver) => caregiver.tenant)
+  caregivers?: Caregiver[];
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

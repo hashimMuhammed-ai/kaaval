@@ -1,14 +1,30 @@
 import { Pool } from 'pg';
+import * as path from 'path';
+import * as dotenv from 'dotenv';
+import { PasswordHasher } from '../app/common/utils/password-hasher';
+
+// Load environment variables from .env files
+dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 export async function runSeed() {
-  const pool = new Pool({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    user: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
-    database: process.env.DB_NAME || 'caregiver_db',
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-  });
+  const dbUrl = process.env.DATABASE_URL || process.env.DB_URL;
+  const pool = new Pool(
+    dbUrl
+      ? {
+          connectionString: dbUrl,
+          ssl: { rejectUnauthorized: false },
+        }
+      : {
+          host: process.env.DB_HOST || 'localhost',
+          port: parseInt(process.env.DB_PORT || '5432', 10),
+          user: process.env.DB_USERNAME || 'postgres',
+          password: process.env.DB_PASSWORD || 'postgres',
+          database: process.env.DB_NAME || 'caregiver_db',
+          ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+        }
+  );
 
   const client = await pool.connect();
   try {
@@ -18,13 +34,14 @@ export async function runSeed() {
     // Insert demo tenant
     const tenantRes = await client.query(
       `
-      INSERT INTO tenants (name, subdomain, status, phone, email, address, settings)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      ON CONFLICT (subdomain) DO UPDATE SET name = EXCLUDED.name
-      RETURNING id, name, subdomain;
+      INSERT INTO tenants (name, subdomain, tenant_slug, status, phone, email, address, settings)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ON CONFLICT (subdomain) DO UPDATE SET name = EXCLUDED.name, tenant_slug = EXCLUDED.tenant_slug
+      RETURNING id, name, subdomain, tenant_slug;
       `,
       [
         'Kerala Care Agency',
+        'keralacare',
         'keralacare',
         'active',
         '+919876543210',
@@ -37,17 +54,18 @@ export async function runSeed() {
     const tenantId = tenantRes.rows[0].id;
     console.log(`Tenant created/updated: ${tenantRes.rows[0].name} (${tenantId})`);
 
-    // Dummy hash for demo password: "Password123!"
-    const passwordHash = '$2b$10$wO3oW1uF1v9X0E7YdKZZ..Qo0X/Z1aQjI4Pj4pZ4u5k4I6C/8qf8O';
+    // Valid scrypt hash for demo password: "Password123!"
+    const passwordHash = PasswordHasher.hash('Password123!');
 
     // 1. Insert platform-level Super Admin (tenant_id = null)
     const superAdminRes = await client.query(
       `
       INSERT INTO users (tenant_id, role, name, email, password_hash, phone, is_active)
       VALUES (NULL, 'super_admin', 'Platform Super Admin', 'superadmin@caregiverplatform.com', $1, '+919999999999', true)
-      ON CONFLICT (email) WHERE tenant_id IS NULL DO UPDATE SET
+      ON CONFLICT (LOWER(email)) WHERE tenant_id IS NULL DO UPDATE SET
         name = EXCLUDED.name,
-        phone = EXCLUDED.phone
+        phone = EXCLUDED.phone,
+        password_hash = EXCLUDED.password_hash
       RETURNING id, name, role;
       `,
       [passwordHash]
@@ -84,7 +102,8 @@ export async function runSeed() {
         ON CONFLICT (tenant_id, email) DO UPDATE SET
           name = EXCLUDED.name,
           role = EXCLUDED.role,
-          phone = EXCLUDED.phone
+          phone = EXCLUDED.phone,
+          password_hash = EXCLUDED.password_hash
         RETURNING id;
         `,
         [tenantId, u.role, u.name, u.email, passwordHash, u.phone]

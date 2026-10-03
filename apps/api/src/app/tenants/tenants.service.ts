@@ -97,9 +97,14 @@ export class TenantsService {
     // 5. Execute atomic database transaction
     return await this.dataSource.transaction(async (manager) => {
       // Create Tenant
+      const tenantSlug = dto.tenantSlug
+        ? dto.tenantSlug.trim().toLowerCase()
+        : normalizedSubdomain;
+
       const tenant = manager.create(Tenant, {
         name: dto.name.trim(),
         subdomain: normalizedSubdomain,
+        tenantSlug,
         customDomain: dto.customDomain ? dto.customDomain.trim().toLowerCase() : null,
         status: TenantStatus.ACTIVE,
         phone: dto.phone ? dto.phone.trim() : null,
@@ -178,6 +183,7 @@ export class TenantsService {
           id: savedTenant.id,
           name: savedTenant.name,
           subdomain: savedTenant.subdomain,
+          tenantSlug: savedTenant.tenantSlug || savedTenant.subdomain,
           customDomain: savedTenant.customDomain,
           status: savedTenant.status,
           phone: savedTenant.phone,

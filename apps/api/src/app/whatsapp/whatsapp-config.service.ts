@@ -17,7 +17,17 @@ export class WhatsAppConfigService {
   }
 
   get apiToken(): string {
-    return this.configService.get<string>('WHATSAPP_API_TOKEN') || '';
+    return (
+      this.configService.get<string>('WHATSAPP_ACCESS_TOKEN') ||
+      this.configService.get<string>('WHATSAPP_API_TOKEN') ||
+      ''
+    );
+  }
+
+  get isTestMode(): boolean {
+    const testMode = this.configService.get<string>('WHATSAPP_TEST_MODE');
+    if (testMode === 'true' || testMode === '1') return true;
+    return false;
   }
 
   get phoneNumberId(): string {

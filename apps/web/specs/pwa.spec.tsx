@@ -28,8 +28,8 @@ describe('PWA Shell Specification', () => {
       expect(manifest.start_url).toBe('/');
       expect(manifest.scope).toBe('/');
       expect(manifest.display).toBe('standalone');
-      expect(manifest.theme_color).toBe('#14b8a6');
-      expect(manifest.background_color).toBe('#070b14');
+      expect(manifest.theme_color).toBe('#ffffff');
+      expect(manifest.background_color).toBe('#ffffff');
 
       // Verify icons
       expect(manifest.icons).toBeInstanceOf(Array);
@@ -60,7 +60,7 @@ describe('PWA Shell Specification', () => {
       expect(fs.existsSync(swPath)).toBe(true);
 
       const swContent = fs.readFileSync(swPath, 'utf8');
-      expect(swContent).toContain("CACHE_NAME = 'caregiver-pwa-v1'");
+      expect(swContent).toContain("CACHE_NAME = 'caregiver-pwa-v2'");
       expect(swContent).toContain("'/offline'");
       expect(swContent).toContain("addEventListener('install'");
       expect(swContent).toContain("addEventListener('activate'");

@@ -74,8 +74,25 @@ Each phase should be independently demoable before moving to the next.
 - [x] Redis cache layer for dashboard queries (short TTL)
 - [x] Dashboard UI (charts for the metrics above)
 
+## Phase 12 — Mobile-First Office Staff & Agency Owner Experience
+- [x] Adaptive Navigation & Mobile Shell: Responsive top app bar, mobile bottom tab bar (Requests, Caregivers, Matching, CRM, More), and slide-out mobile drawer for secondary views (`dashboard/layout.tsx`)
+- [x] Care Requests Mobile Card Feed: Responsive table-to-card toggle, 1-tap Call (`tel:...`) & WhatsApp actions, swipeable horizontal status filter chips (`dashboard/requests/page.tsx`)
+- [x] Caregivers Roster Mobile Cards & Quick Dial: Touch cards with skills badges, 1-tap Call/WhatsApp, and persistent `+ Add Caregiver` Floating Action Button (`dashboard/caregivers/page.tsx`)
+- [x] Touch-Friendly Smart Matching Engine: Thumb-friendly distance radius slider and touch filter chips, mobile match result cards with 1-tap assign (`dashboard/matching/page.tsx`)
+- [x] Mobile Forms & Document Capture: Single-column responsive layout for caregiver onboarding, native camera/gallery document upload triggers, 44px+ touch targets
+
 ## Cross-cutting (ongoing throughout)
 - [x] Document expiry tracking
 - [ ] Four-role access refinement (Super Admin / Owner / Office Staff / Caregiver visibility & permissions)
 - [ ] Manual subscription billing & renewal tracking (Super Admin out-of-band payment recording)
 - [ ] Data encryption at rest for patient/health-related fields
+
+## Free-Tier Deployment & Cloud Readiness
+- [x] Environment configuration templates (`.env.example`, `apps/api/.env.example`, `apps/web/.env.example`)
+- [x] Migration and entity support for `tenant_slug` on `tenants` table (`018_add_tenant_slug.sql`)
+- [x] Path-based tenant resolution (`/t/:tenantSlug/...` on frontend Next.js rewrite, `/api/t/:tenantSlug/...` & `x-tenant-slug` header on NestJS backend)
+- [x] Cloudflare R2 S3-compatible client storage configuration with zero egress fees
+- [x] Backend Render preparation: dynamic `PORT`, `0.0.0.0` host binding, `GET /health` endpoint (bypassing global prefix), in-process BullMQ execution, `render.yaml` blueprint, `start:prod` npm script
+- [x] Frontend Vercel preparation: PWA `manifest.json` and service worker compatibility on `*.vercel.app`, configurable `NEXT_PUBLIC_API_URL`, `vercel.json` build config
+- [x] WhatsApp Business Cloud API test mode handling and recipient verification workflow
+- [x] Deployment documentation in `PROJECT_BRIEF.md` and manual dashboard configuration runbook

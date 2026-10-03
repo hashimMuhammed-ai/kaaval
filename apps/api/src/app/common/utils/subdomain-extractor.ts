@@ -82,6 +82,16 @@ export class SubdomainExtractor {
       return null;
     }
 
+    // Free-tier cloud hosting domains that are not tenant subdomains
+    if (
+      host.endsWith('.vercel.app') ||
+      host.endsWith('.onrender.com') ||
+      host.endsWith('.upstash.io') ||
+      host.endsWith('.neon.tech')
+    ) {
+      return null;
+    }
+
     // 4. Handle configured base app domain (e.g. "caregiverplatform.com" or process.env.APP_DOMAIN)
     const effectiveBaseDomain = (
       baseDomain ||

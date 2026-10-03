@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { tenantPath } from '../utils/subdomain';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -53,6 +54,38 @@ export function PwaInstallPrompt() {
 
     if (isStandalone) {
       setIsInstalled(true);
+      // Auto-route to portal or login if launched at root in standalone PWA
+      if (typeof window !== 'undefined' && window.location.pathname === '/') {
+        const storedSlug =
+          localStorage.getItem('tenant_slug') ||
+          localStorage.getItem('tenant_subdomain');
+        const token = localStorage.getItem('auth_token');
+        const profileStr = localStorage.getItem('user_profile');
+
+        if (token && profileStr) {
+          try {
+            const user = JSON.parse(profileStr);
+            if (user.role === 'caregiver') {
+              window.location.replace(tenantPath('/portal', storedSlug || undefined));
+              return;
+            } else if (user.role === 'super_admin') {
+              window.location.replace('/super-admin');
+              return;
+            } else {
+              window.location.replace(tenantPath('/dashboard', storedSlug || undefined));
+              return;
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+
+        // If not authenticated but tenant is known, open agency login
+        if (storedSlug) {
+          window.location.replace(tenantPath('/login', storedSlug));
+          return;
+        }
+      }
       return;
     }
 

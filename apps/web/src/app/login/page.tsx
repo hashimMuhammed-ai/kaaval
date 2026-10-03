@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '../../components/navbar';
 import Footer from '../../components/footer';
-import { getSubdomain } from '../../utils/subdomain';
+import { getSubdomain, getTenantSlug, tenantPath } from '../../utils/subdomain';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,9 +19,16 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const sub = getSubdomain();
+    const sub = getTenantSlug() || getSubdomain();
     setSubdomain(sub);
     if (sub) {
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('tenant_slug', sub);
+        } catch {
+          // Ignore localStorage errors
+        }
+      }
       const formatted = sub
         .split('-')
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
@@ -52,9 +59,18 @@ export default function LoginPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(subdomain ? { 'x-tenant-subdomain': subdomain } : {}),
+          ...(subdomain
+            ? {
+                'x-tenant-slug': subdomain,
+                'x-tenant-subdomain': subdomain,
+              }
+            : {}),
         },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          ...(subdomain ? { subdomain } : {}),
+        }),
       });
 
       const data = await res.json();
@@ -64,9 +80,13 @@ export default function LoginPage() {
       }
 
       // Store JWT token and user info
+      const resolvedTenant = data.tenant?.subdomain || subdomain;
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth_token', data.accessToken);
         localStorage.setItem('user_profile', JSON.stringify(data.user));
+        if (resolvedTenant) {
+          localStorage.setItem('tenant_slug', resolvedTenant);
+        }
       }
 
       setSuccessMsg(`Welcome, ${data.user?.name || 'User'}! Redirecting...`);
@@ -75,11 +95,11 @@ export default function LoginPage() {
       setTimeout(() => {
         const role = data.user?.role;
         if (role === 'caregiver') {
-          router.push('/portal');
+          router.push(tenantPath('/portal', resolvedTenant || undefined));
         } else if (role === 'super_admin') {
           router.push('/super-admin');
         } else {
-          router.push('/dashboard');
+          router.push(tenantPath('/dashboard', resolvedTenant || undefined));
         }
       }, 700);
     } catch (err: any) {

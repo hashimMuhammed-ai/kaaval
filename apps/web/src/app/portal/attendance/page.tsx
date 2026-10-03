@@ -293,12 +293,10 @@ export default function CaregiverAttendancePage() {
           alignItems: 'center',
           gap: '1.25rem',
           border: isCheckedIn && !isCheckedOut
-            ? '1px solid rgba(245, 158, 11, 0.4)'
-            : '1px solid rgba(20, 184, 166, 0.35)',
-          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(17, 26, 46, 0.98))',
-          boxShadow: isCheckedIn && !isCheckedOut
-            ? '0 10px 30px -5px rgba(245, 158, 11, 0.2)'
-            : '0 10px 30px -5px rgba(20, 184, 166, 0.2)',
+            ? '1px solid #fde68a'
+            : '1px solid #ccfbf1',
+          background: 'linear-gradient(135deg, #ffffff, #f0fdfa)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -313,7 +311,7 @@ export default function CaregiverAttendancePage() {
             style={{
               fontSize: '1.85rem',
               fontWeight: 800,
-              color: '#ffffff',
+              color: '#172033',
               letterSpacing: '0.05em',
               marginTop: '0.2rem',
               fontVariantNumeric: 'tabular-nums',
@@ -331,16 +329,16 @@ export default function CaregiverAttendancePage() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.4rem',
-              backgroundColor: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #e2e8f0',
               borderRadius: 'var(--radius-full)',
               padding: '0.35rem 0.85rem',
               fontSize: '0.78rem',
-              color: '#e2e8f0',
+              color: '#475569',
             }}
           >
             <span>Duty:</span>
-            <strong style={{ color: '#ffffff' }}>{patientName}</strong>
+            <strong style={{ color: '#172033' }}>{patientName}</strong>
           </div>
         )}
 
@@ -366,12 +364,12 @@ export default function CaregiverAttendancePage() {
               border: 'none',
               cursor: actionLoading || !hasActiveDuty || isCheckedOut ? 'not-allowed' : 'pointer',
               background: !hasActiveDuty
-                ? 'rgba(100, 116, 139, 0.2)'
+                ? '#cbd5e1'
                 : isCheckedOut
-                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(13, 148, 136, 0.35))'
+                ? 'linear-gradient(135deg, #16a34a, #15803D)'
                 : isCheckedIn
-                ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                : 'linear-gradient(135deg, #14b8a6, #0d9488)',
+                ? 'linear-gradient(135deg, #f59e0b, #D97706)'
+                : 'linear-gradient(135deg, #3b82f6, #2563EB)',
               color: '#ffffff',
               display: 'flex',
               flexDirection: 'column',
@@ -379,9 +377,9 @@ export default function CaregiverAttendancePage() {
               justifyContent: 'center',
               gap: '0.4rem',
               boxShadow: isCheckedIn && !isCheckedOut
-                ? '0 0 35px rgba(245, 158, 11, 0.45)'
+                ? '0 0 35px rgba(217, 119, 6, 0.4)'
                 : hasActiveDuty && !isCheckedOut
-                ? '0 0 35px rgba(20, 184, 166, 0.45)'
+                ? '0 0 35px rgba(37, 99, 235, 0.4)'
                 : 'none',
               transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               opacity: !hasActiveDuty || isCheckedOut ? 0.85 : 1,
@@ -441,16 +439,16 @@ export default function CaregiverAttendancePage() {
             <div
               id="active-shift-timer-card"
               style={{
-                backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
+                backgroundColor: '#fffbeb',
+                border: '1px solid #fde68a',
                 borderRadius: 'var(--radius-md)',
                 padding: '0.75rem',
               }}
             >
-              <div style={{ fontSize: '0.72rem', color: '#fbbf24', textTransform: 'uppercase', fontWeight: 700 }}>
+              <div style={{ fontSize: '0.72rem', color: '#D97706', textTransform: 'uppercase', fontWeight: 700 }}>
                 Shift in progress • Checked in at {formatTime(todayStatus?.attendance?.checkInTime)}
               </div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#172033', marginTop: '0.2rem' }}>
                 {elapsedDuration || 'Active on duty'}
               </div>
             </div>
@@ -458,16 +456,16 @@ export default function CaregiverAttendancePage() {
             <div
               id="shift-completed-card"
               style={{
-                backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
+                backgroundColor: '#f0fdf4',
+                border: '1px solid #bbf7d0',
                 borderRadius: 'var(--radius-md)',
                 padding: '0.75rem',
               }}
             >
-              <div style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 700 }}>
+              <div style={{ fontSize: '0.75rem', color: '#15803D', fontWeight: 700 }}>
                 ✓ Today's Shift Recorded & Validated
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '0.8rem', color: '#475569', marginTop: '0.2rem' }}>
                 In: {formatTime(todayStatus?.attendance?.checkInTime)} &bull; Out: {formatTime(todayStatus?.attendance?.checkOutTime)}
               </div>
             </div>
@@ -490,7 +488,7 @@ export default function CaregiverAttendancePage() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--primary-400)',
+                color: '#2563EB',
                 fontSize: '0.75rem',
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -513,10 +511,10 @@ export default function CaregiverAttendancePage() {
                   width: '100%',
                   marginTop: '0.5rem',
                   padding: '0.5rem 0.75rem',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
                   borderRadius: 'var(--radius-sm)',
-                  color: '#ffffff',
+                  color: '#172033',
                   fontSize: '0.78rem',
                   resize: 'none',
                   outline: 'none',
@@ -533,23 +531,23 @@ export default function CaregiverAttendancePage() {
         className="glass-panel"
         style={{
           padding: '1.25rem',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid #e2e8f0',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
           <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#172033' }}>
               Recent Shift History
             </h3>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '0.72rem', color: '#475569' }}>
               Self-punch records feeding monthly salary calculations
             </div>
           </div>
           <span
             style={{
               fontSize: '0.72rem',
-              color: '#34d399',
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              color: '#15803D',
+              backgroundColor: '#f0fdf4',
               padding: '0.2rem 0.6rem',
               borderRadius: 'var(--radius-full)',
               fontWeight: 700,
@@ -576,16 +574,16 @@ export default function CaregiverAttendancePage() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '0.65rem 0.85rem',
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    backgroundColor: '#F8FAFC',
                     borderRadius: 'var(--radius-md)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    border: '1px solid #e2e8f0',
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#ffffff' }}>
+                    <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#172033' }}>
                       {formattedDate}
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#475569', marginTop: '0.1rem' }}>
                       In: {formatTime(record.checkInTime)} &bull; Out: {formatTime(record.checkOutTime)}
                     </div>
                   </div>
@@ -599,15 +597,15 @@ export default function CaregiverAttendancePage() {
                         padding: '0.2rem 0.5rem',
                         borderRadius: 'var(--radius-full)',
                         backgroundColor: record.status === 'present'
-                          ? 'rgba(16, 185, 129, 0.15)'
-                          : 'rgba(245, 158, 11, 0.15)',
-                        color: record.status === 'present' ? '#34d399' : '#fbbf24',
+                          ? '#f0fdf4'
+                          : '#fffbeb',
+                        color: record.status === 'present' ? '#15803D' : '#D97706',
                       }}
                     >
                       {record.status}
                     </span>
                     {record.verified && (
-                      <div style={{ fontSize: '0.65rem', color: '#2dd4bf', marginTop: '0.15rem' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#0F766E', marginTop: '0.15rem' }}>
                         ✓ Verified
                       </div>
                     )}

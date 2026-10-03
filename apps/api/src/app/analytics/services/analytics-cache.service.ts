@@ -42,6 +42,7 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    const redisUrl = this.configService.get<string>('REDIS_URL');
     const host = this.configService.get<string>('REDIS_HOST', 'localhost');
     const port = parseInt(
       this.configService.get<string>('REDIS_PORT', '6379'),
@@ -51,15 +52,22 @@ export class AnalyticsCacheService implements OnModuleInit, OnModuleDestroy {
       this.configService.get<string>('REDIS_PASSWORD') || undefined;
 
     try {
-      this.client = new Redis({
-        host,
-        port,
-        password,
-        lazyConnect: true,
-        enableOfflineQueue: false,
-        maxRetriesPerRequest: 1,
-        retryStrategy: () => null, // Do not infinite loop reconnect in local dev/tests without Redis
-      });
+      this.client = redisUrl
+        ? new Redis(redisUrl, {
+            lazyConnect: true,
+            enableOfflineQueue: false,
+            maxRetriesPerRequest: 1,
+            retryStrategy: () => null,
+          })
+        : new Redis({
+            host,
+            port,
+            password,
+            lazyConnect: true,
+            enableOfflineQueue: false,
+            maxRetriesPerRequest: 1,
+            retryStrategy: () => null, // Do not infinite loop reconnect in local dev/tests without Redis
+          });
 
       this.client.on('connect', () => {
         this.isRedisReady = true;

@@ -120,6 +120,7 @@ export default function CaregiverStatusBoardPage() {
 
   // Filters & View Mode
   const [viewMode, setViewMode] = useState<'board' | 'table'>('board');
+  const [mobileStatusTab, setMobileStatusTab] = useState<CaregiverStatusType | 'all'>('all');
   const [selectedDistrict, setSelectedDistrict] = useState('All Districts');
   const [selectedSkill, setSelectedSkill] = useState('All Skills');
   const [searchQuery, setSearchQuery] = useState('');
@@ -287,6 +288,14 @@ export default function CaregiverStatusBoardPage() {
 
     return map;
   }, [filteredCaregivers]);
+
+  // Filter caregivers for mobile card view by active status tab
+  const mobileFilteredCaregivers = useMemo(() => {
+    if (mobileStatusTab === 'all') {
+      return filteredCaregivers;
+    }
+    return filteredCaregivers.filter((cg) => cg.status === mobileStatusTab);
+  }, [filteredCaregivers, mobileStatusTab]);
 
   // Status Change (via Drag & Drop or Dropdown)
   const handleUpdateStatus = async (
@@ -1072,9 +1081,70 @@ export default function CaregiverStatusBoardPage() {
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
           Loading live caregiver status board...
         </div>
-      ) : viewMode === 'board' ? (
-        /* ================= 4-COLUMN KANBAN BOARD ================= */
-        <div className="status-board-grid">
+      ) : (
+        <>
+          {/* Mobile Horizontal Status Filter Tabs */}
+          <div
+            className="mobile-scroll-x show-on-mobile-block"
+            style={{
+              display: 'none',
+              gap: '0.5rem',
+              paddingBottom: '0.75rem',
+              marginBottom: '0.75rem',
+            }}
+          >
+            {[
+              { id: 'all', label: 'All Staff', count: counts.total, color: '#38bdf8' },
+              { id: 'available', label: 'Available', count: counts.available, color: '#10b981' },
+              { id: 'assigned', label: 'Assigned', count: counts.assigned, color: '#38bdf8' },
+              { id: 'on_leave', label: 'On Leave', count: counts.on_leave, color: '#f59e0b' },
+              { id: 'inactive', label: 'Inactive', count: counts.inactive, color: '#94a3b8' },
+            ].map((tab) => {
+              const isActive = mobileStatusTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setMobileStatusTab(tab.id as any)}
+                  id={`mobile-tab-${tab.id}`}
+                  style={{
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    border: isActive ? `1px solid ${tab.color}` : '1px solid var(--border-subtle)',
+                    backgroundColor: isActive ? 'rgba(20, 184, 166, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                    color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    style={{
+                      padding: '0.1rem 0.4rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.7rem',
+                      backgroundColor: isActive ? tab.color : 'rgba(255, 255, 255, 0.08)',
+                      color: isActive ? '#070b14' : 'var(--text-muted)',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Desktop Board and Table Views */}
+          <div className="desktop-only" style={{ width: '100%' }}>
+            {viewMode === 'board' ? (
+              /* ================= 4-COLUMN KANBAN BOARD ================= */
+              <div className="status-board-grid">
           {(['available', 'assigned', 'on_leave', 'inactive'] as CaregiverStatusType[]).map(
             (statusKey) => {
               const cfg = STATUS_CONFIG[statusKey];
@@ -1503,6 +1573,268 @@ export default function CaregiverStatusBoardPage() {
           </table>
         </div>
       )}
+    </div>
+
+      {/* Mobile Caregiver Cards Feed */}
+      <div
+        className="show-on-mobile-block"
+        id="mobile-caregivers-cards-feed"
+        style={{ display: 'none', padding: '0.25rem 0' }}
+      >
+        {mobileFilteredCaregivers.length === 0 ? (
+          <div
+            style={{
+              padding: '3rem 1rem',
+              textAlign: 'center',
+              color: 'var(--text-muted)',
+              backgroundColor: 'rgba(17, 26, 46, 0.4)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px dashed var(--border-subtle)',
+            }}
+          >
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👥</div>
+            <div style={{ fontWeight: 600, color: '#ffffff' }}>No caregivers in this filter</div>
+            <div style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>
+              Try selecting "All Staff" or clearing search/district filters.
+            </div>
+          </div>
+        ) : (
+          mobileFilteredCaregivers.map((cg) => {
+            const cfg = STATUS_CONFIG[cg.status as CaregiverStatusType] || STATUS_CONFIG.available;
+            const initials = cg.fullName
+              ? cg.fullName
+                  .split(' ')
+                  .map((n: string) => n[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase()
+              : 'CG';
+
+            return (
+              <div
+                key={`mobile-cg-${cg.id}`}
+                id={`mobile-caregiver-card-${cg.id}`}
+                className="glass-card"
+                style={{
+                  padding: '1rem',
+                  borderRadius: 'var(--radius-lg)',
+                  border: `1px solid ${cfg.borderBadge}`,
+                  backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                  marginBottom: '0.85rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                }}
+              >
+                {/* Top: Avatar, Name, Rating & Daily Rate */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(20, 184, 166, 0.2)',
+                        border: '1px solid rgba(20, 184, 166, 0.4)',
+                        color: 'var(--primary-400)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {initials}
+                    </div>
+                    <div>
+                      <div
+                        onClick={() => openDrawer(cg)}
+                        id={`mobile-cg-name-${cg.id}`}
+                        style={{
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          color: '#ffffff',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {cg.fullName}
+                      </div>
+                      <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                        📍 {cg.district || 'Kerala'} {cg.city ? `• ${cg.city}` : ''}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem', fontSize: '0.725rem' }}>
+                        <span style={{ color: '#fbbf24', fontWeight: 600 }}>
+                          ★ {cg.averageRating ? Number(cg.averageRating).toFixed(1) : 'New'}
+                        </span>
+                        <span style={{ color: 'var(--text-muted)' }}>
+                          • {cg.jobsCompleted || 0} jobs
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>
+                      ₹{cg.dailyRate}<span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>/d</span>
+                    </div>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: 'var(--radius-full)',
+                        backgroundColor: cfg.bgBadge,
+                        border: `1px solid ${cfg.borderBadge}`,
+                        color: cfg.textColor,
+                        marginTop: '0.35rem',
+                      }}
+                    >
+                      <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: cfg.dotColor }} />
+                      {cfg.label}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Skills tags */}
+                {cg.skills && cg.skills.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
+                    {cg.skills.slice(0, 4).map((sk: string) => (
+                      <span
+                        key={sk}
+                        style={{
+                          fontSize: '0.7rem',
+                          padding: '0.15rem 0.45rem',
+                          borderRadius: 'var(--radius-sm)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid var(--border-subtle)',
+                          color: 'var(--primary-400)',
+                        }}
+                      >
+                        {sk}
+                      </span>
+                    ))}
+                    {cg.skills.length > 4 && (
+                      <span style={{ fontSize: '0.675rem', color: 'var(--text-muted)', alignSelf: 'center' }}>
+                        +{cg.skills.length - 4} more
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Document & Compliance warning */}
+                {cg.documents && cg.documents.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+                    <span style={{ color: 'var(--primary-400)' }}>
+                      📜 {cg.documents.length} {cg.documents.length === 1 ? 'doc verified' : 'docs verified'}
+                    </span>
+                    {cg.documents.some((d: any) => d.expiryStatus === 'expired') && (
+                      <span style={{ color: '#f87171', fontWeight: 600 }}>· ✕ Expired Doc</span>
+                    )}
+                  </div>
+                )}
+
+                {/* 1-Tap Action Buttons: Direct Phone Call & WhatsApp */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <a
+                    href={`tel:${(cg.phone || '').replace(/[^0-9+]/g, '')}`}
+                    id={`mobile-call-caregiver-${cg.id}`}
+                    style={{
+                      padding: '0.55rem',
+                      fontSize: '0.825rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
+                      color: '#ffffff',
+                      backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                      borderRadius: 'var(--radius-md)',
+                      textDecoration: 'none',
+                      minHeight: '44px',
+                    }}
+                  >
+                    <span>📞 Call Staff</span>
+                  </a>
+
+                  <a
+                    href={`https://wa.me/${(cg.phone || '').replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    id={`mobile-wa-caregiver-${cg.id}`}
+                    style={{
+                      padding: '0.55rem',
+                      fontSize: '0.825rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
+                      color: '#ffffff',
+                      backgroundColor: '#16a34a',
+                      border: '1px solid #22c55e',
+                      borderRadius: 'var(--radius-md)',
+                      textDecoration: 'none',
+                      minHeight: '44px',
+                      boxShadow: '0 2px 8px rgba(34, 197, 94, 0.25)',
+                    }}
+                  >
+                    <span>💬 WhatsApp</span>
+                  </a>
+                </div>
+
+                {/* Secondary Row: Quick Status Change Dropdown & Profile Drawer */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <select
+                    value={cg.status}
+                    onChange={(e) =>
+                      handleUpdateStatus(cg.id, e.target.value as CaregiverStatusType)
+                    }
+                    id={`mobile-status-select-${cg.id}`}
+                    style={{
+                      flex: 1,
+                      background: 'rgba(11, 17, 32, 0.95)',
+                      color: '#ffffff',
+                      border: '1px solid var(--border-card)',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.8rem',
+                      padding: '0.5rem 0.6rem',
+                      minHeight: '40px',
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="available">Status: Available</option>
+                    <option value="assigned">Status: Assigned</option>
+                    <option value="on_leave">Status: On Leave</option>
+                    <option value="inactive">Status: Inactive</option>
+                  </select>
+
+                  <button
+                    onClick={() => openDrawer(cg)}
+                    id={`mobile-view-profile-${cg.id}`}
+                    className="btn-secondary"
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '0.8rem',
+                      minHeight: '40px',
+                    }}
+                  >
+                    View Profile & Docs
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </>
+  )}
 
       {/* ================= CAREGIVER DETAIL & EDIT DRAWER ================= */}
       {selectedCaregiver && (
@@ -1959,8 +2291,8 @@ export default function CaregiverStatusBoardPage() {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '0.725rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
-                    Choose File (PDF, PNG, JPG, WEBP — Max 10MB)
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>
+                    Choose Document / Certificate File
                   </label>
                   <input
                     id="caregiver-file-upload"
@@ -1971,20 +2303,61 @@ export default function CaregiverStatusBoardPage() {
                         setUploadFile(e.target.files[0]);
                       }
                     }}
-                    style={{
-                      fontSize: '0.75rem',
-                      color: 'var(--text-secondary)',
-                      width: '100%',
-                    }}
-                    required
+                    style={{ display: 'none' }}
                   />
+                  <input
+                    id="caregiver-camera-upload"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setUploadFile(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                  />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      id="drawer-camera-trigger"
+                      onClick={() => document.getElementById('caregiver-camera-upload')?.click()}
+                      className="btn-secondary"
+                      style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', fontSize: '0.8rem' }}
+                    >
+                      <span>📸</span> Snap Photo
+                    </button>
+                    <button
+                      type="button"
+                      id="drawer-file-trigger"
+                      onClick={() => document.getElementById('caregiver-file-upload')?.click()}
+                      className="btn-secondary"
+                      style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', fontSize: '0.8rem' }}
+                    >
+                      <span>📁</span> Browse File
+                    </button>
+                  </div>
+
+                  {uploadFile && (
+                    <div style={{ marginTop: '0.35rem', fontSize: '0.775rem', color: '#2dd4bf', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>📄 {uploadFile.name} ({(uploadFile.size / 1024).toFixed(0)} KB)</span>
+                      <button
+                        type="button"
+                        onClick={() => setUploadFile(null)}
+                        style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '0.75rem' }}
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button
                   type="submit"
-                  disabled={uploadingDoc}
+                  disabled={uploadingDoc || !uploadFile}
                   className="btn-primary"
-                  style={{ padding: '0.5rem', fontSize: '0.8rem', marginTop: '0.25rem' }}
+                  style={{ minHeight: '44px', padding: '0.5rem', fontSize: '0.85rem', fontWeight: 700, marginTop: '0.25rem' }}
                 >
                   {uploadingDoc ? 'Uploading to Object Storage...' : 'Upload Document'}
                 </button>
@@ -2670,6 +3043,35 @@ export default function CaregiverStatusBoardPage() {
           </div>
         </div>
       )}
+
+      {/* Mobile Floating Action Button: + Add Staff */}
+      <Link
+        href="/dashboard/caregivers/new"
+        id="mobile-caregiver-fab"
+        className="hide-on-desktop show-on-mobile"
+        style={{
+          position: 'fixed',
+          bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
+          right: '1.25rem',
+          backgroundColor: 'var(--primary-500)',
+          color: '#ffffff',
+          borderRadius: 'var(--radius-full)',
+          padding: '0.75rem 1.25rem',
+          fontWeight: 700,
+          fontSize: '0.875rem',
+          boxShadow: '0 8px 20px rgba(20, 184, 166, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3)',
+          alignItems: 'center',
+          gap: '0.4rem',
+          zIndex: 40,
+          textDecoration: 'none',
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        <span>Add Staff</span>
+      </Link>
     </div>
   );
 }

@@ -13,6 +13,7 @@ describe('TenantResolverService', () => {
     id: 'tenant-uuid-1',
     name: 'Care Kerala Agency',
     subdomain: 'carekerala',
+    tenantSlug: 'carekerala',
     customDomain: 'carekerala.in',
     status: TenantStatus.ACTIVE,
     phone: '+91 9876543210',
@@ -83,7 +84,56 @@ describe('TenantResolverService', () => {
     });
   });
 
+  describe('resolveBySlug', () => {
+    it('should find tenant by slug in lowercase', async () => {
+      const result = await service.resolveBySlug('CareKerala');
+
+      expect(result).toBe(mockTenant);
+      expect(mockTenantRepository.createQueryBuilder).toHaveBeenCalledWith('tenant');
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'LOWER(tenant.tenant_slug) = :slug OR LOWER(tenant.subdomain) = :slug',
+        { slug: 'carekerala' }
+      );
+    });
+
+    it('should return null for empty slug', async () => {
+      const result = await service.resolveBySlug('');
+      expect(result).toBeNull();
+    });
+  });
+
   describe('resolveFromRequest', () => {
+    it('should resolve tenant via path-based URL (/t/:tenantSlug)', async () => {
+      const req = {
+        originalUrl: '/t/carekerala/dashboard',
+        headers: {},
+      };
+
+      const result = await service.resolveFromRequest(req);
+      expect(result).toBe(mockTenant);
+    });
+
+    it('should resolve tenant via API path (/api/t/:tenantSlug)', async () => {
+      const req = {
+        url: '/api/t/carekerala/caregivers',
+        headers: {},
+      };
+
+      const result = await service.resolveFromRequest(req);
+      expect(result).toBe(mockTenant);
+    });
+
+    it('should resolve tenant via x-tenant-slug header', async () => {
+      const req = {
+        headers: {
+          'x-tenant-slug': 'carekerala',
+        },
+      };
+
+      const result = await service.resolveFromRequest(req);
+      expect(result).toBe(mockTenant);
+    });
+
     it('should resolve tenant via x-tenant-subdomain header', async () => {
       const req = {
         headers: {
@@ -181,6 +231,7 @@ describe('TenantResolverService', () => {
         id: mockTenant.id,
         name: mockTenant.name,
         subdomain: mockTenant.subdomain,
+        tenantSlug: mockTenant.tenantSlug,
         customDomain: mockTenant.customDomain,
         status: mockTenant.status,
         phone: mockTenant.phone,

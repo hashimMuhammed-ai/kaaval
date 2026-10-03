@@ -1,6 +1,12 @@
-import { getSubdomain, isValidSubdomain } from './subdomain';
+import { getSubdomain, getTenantSlug, tenantPath, isValidSubdomain } from './subdomain';
 
-describe('Frontend Subdomain Utilities', () => {
+describe('Frontend Subdomain & Tenant Routing Utilities', () => {
+  beforeEach(() => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.clear();
+    }
+  });
+
   describe('getSubdomain', () => {
     it('should extract subdomain from platform URL', () => {
       expect(getSubdomain('carekerala.caregiverplatform.com')).toBe('carekerala');
@@ -27,6 +33,37 @@ describe('Frontend Subdomain Utilities', () => {
       expect(getSubdomain('api.caregiverplatform.com')).toBeNull();
       expect(getSubdomain('admin.caregiverplatform.com')).toBeNull();
       expect(getSubdomain('app.caregiverplatform.com')).toBeNull();
+    });
+
+    it('should return null for free-tier cloud deployment platforms (vercel.app, onrender.com)', () => {
+      expect(getSubdomain('kaaval-web.vercel.app')).toBeNull();
+      expect(getSubdomain('caregiver-web.vercel.app')).toBeNull();
+      expect(getSubdomain('caregiver-api.onrender.com')).toBeNull();
+    });
+  });
+
+  describe('getTenantSlug (Path-based routing)', () => {
+    it('should extract tenant slug from path /t/:tenantSlug', () => {
+      expect(getTenantSlug(null, '/t/carekerala')).toBe('carekerala');
+      expect(getTenantSlug(null, '/t/carekerala/dashboard')).toBe('carekerala');
+      expect(getTenantSlug(null, '/t/carekerala/portal')).toBe('carekerala');
+    });
+
+    it('should return null or fallback to subdomain when not in /t/:tenantSlug path', () => {
+      expect(getTenantSlug('carekerala.caregiverplatform.com', '/dashboard')).toBe('carekerala');
+      expect(getTenantSlug('localhost:3000', '/dashboard')).toBeNull();
+    });
+  });
+
+  describe('tenantPath', () => {
+    it('should prefix path with /t/:slug when tenantSlug is present', () => {
+      expect(tenantPath('/dashboard', 'carekerala')).toBe('/t/carekerala/dashboard');
+      expect(tenantPath('/login', 'carekerala')).toBe('/t/carekerala/login');
+      expect(tenantPath('/', 'carekerala')).toBe('/t/carekerala');
+    });
+
+    it('should not duplicate /t/:slug if already prefixed', () => {
+      expect(tenantPath('/t/carekerala/dashboard', 'carekerala')).toBe('/t/carekerala/dashboard');
     });
   });
 

@@ -69,19 +69,6 @@ export default function CaregiverPortalHomePage() {
   const [attendance, setAttendance] = useState<AttendanceToday | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState<string>('');
-
-  useEffect(() => {
-    const updateClock = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      );
-    };
-    updateClock();
-    const interval = setInterval(updateClock, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     async function loadPortalData() {
@@ -164,13 +151,13 @@ export default function CaregiverPortalHomePage() {
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'available':
-        return { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', border: 'rgba(16, 185, 129, 0.35)', label: 'Available' };
+        return { bg: '#f0fdf4', text: '#15803D', border: '#86efac', dot: '#16a34a', label: 'Available' };
       case 'assigned':
-        return { bg: 'rgba(56, 189, 248, 0.15)', text: '#38bdf8', border: 'rgba(56, 189, 248, 0.35)', label: 'On Duty' };
+        return { bg: '#eff6ff', text: '#2563EB', border: '#93c5fd', dot: '#2563EB', label: 'On Duty' };
       case 'on_leave':
-        return { bg: 'rgba(245, 158, 11, 0.15)', text: '#fbbf24', border: 'rgba(245, 158, 11, 0.35)', label: 'On Leave' };
+        return { bg: '#fffbeb', text: '#D97706', border: '#fcd34d', dot: '#d97706', label: 'On Leave' };
       default:
-        return { bg: 'rgba(148, 163, 184, 0.15)', text: '#94a3b8', border: 'rgba(148, 163, 184, 0.35)', label: 'Inactive' };
+        return { bg: '#F8FAFC', text: '#475569', border: '#cbd5e1', dot: '#64748b', label: 'Inactive' };
     }
   };
 
@@ -191,9 +178,9 @@ export default function CaregiverPortalHomePage() {
         className="glass-panel"
         style={{
           padding: '1.25rem',
-          background: 'linear-gradient(135deg, rgba(22, 34, 59, 0.85), rgba(17, 26, 46, 0.95))',
-          border: '1px solid rgba(20, 184, 166, 0.25)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+          background: 'linear-gradient(135deg, #ffffff, #f0fdfa)',
+          border: '1px solid #ccfbf1',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -206,12 +193,12 @@ export default function CaregiverPortalHomePage() {
             width: '90px',
             height: '90px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(20, 184, 166, 0.25), transparent 70%)',
+            background: 'radial-gradient(circle, rgba(20, 184, 166, 0.15), transparent 70%)',
             pointerEvents: 'none',
           }}
         />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {getGreeting()} ☀️
@@ -221,7 +208,7 @@ export default function CaregiverPortalHomePage() {
               style={{
                 fontSize: '1.35rem',
                 fontWeight: 700,
-                color: '#ffffff',
+                color: '#172033',
                 marginTop: '0.15rem',
                 lineHeight: 1.25,
               }}
@@ -237,14 +224,14 @@ export default function CaregiverPortalHomePage() {
               padding: '0.35rem 0.75rem',
               borderRadius: 'var(--radius-full)',
               backgroundColor: statusConfig.bg,
-              border: `1px solid ${statusConfig.border}`,
+              border: `1.5px solid ${statusConfig.border}`,
               color: statusConfig.text,
               fontSize: '0.75rem',
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
-              gap: '0.4rem',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+              gap: '0.45rem',
+              boxShadow: 'none',
             }}
           >
             <span
@@ -252,189 +239,49 @@ export default function CaregiverPortalHomePage() {
                 width: '7px',
                 height: '7px',
                 borderRadius: '50%',
-                backgroundColor: statusConfig.text,
-                boxShadow: `0 0 6px ${statusConfig.text}`,
+                backgroundColor: statusConfig.dot || statusConfig.text,
               }}
             />
             <span>{statusConfig.label}</span>
           </div>
         </div>
-
-        {/* Location & Quick Meta */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            <span>
-              {profile?.city || 'Kochi'}, {profile?.district || 'Ernakulam'}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span>{currentTime || 'Shift Clock'}</span>
-          </div>
-        </div>
-
-        {/* Rating and Completed Jobs Badges */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.6rem', marginTop: '0.75rem' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            padding: '0.25rem 0.65rem',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(251, 191, 36, 0.12)',
-            border: '1px solid rgba(251, 191, 36, 0.3)',
-            fontSize: '0.78rem',
-            color: '#fbbf24',
-            fontWeight: 600
-          }}>
-            <span>★</span>
-            <span>{profile?.averageRating ? Number(profile.averageRating).toFixed(1) : 'New'} Rating</span>
-            <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({profile?.totalRatings || 0} reviews)</span>
-          </div>
-
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            padding: '0.25rem 0.65rem',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            fontSize: '0.78rem',
-            color: '#34d399',
-            fontWeight: 600
-          }}>
-            <span>💼</span>
-            <span>{profile?.jobsCompleted || 0} Jobs Completed</span>
-          </div>
-        </div>
       </section>
 
-      {/* Emergency Agency SOS / Help Strip */}
-      <section
-        id="agency-emergency-helpline-card"
-        style={{
-          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(185, 28, 28, 0.08))',
-          border: '1px solid rgba(239, 68, 68, 0.25)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '0.85rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '0.75rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <div
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#f87171',
-              flexShrink: 0,
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#fca5a5' }}>
-              Coordinator SOS Support
-            </div>
-            <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-              Direct line for duty assistance or patient emergency
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
-          <a
-            id="emergency-call-btn"
-            href="tel:+919876543210"
-            title="Call Agency Coordinator"
-            aria-label="Call Agency Coordinator"
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              border: '1px solid rgba(239, 68, 68, 0.4)',
-              color: '#fca5a5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-            </svg>
-          </a>
-
-          <a
-            id="emergency-whatsapp-btn"
-            href="https://wa.me/919876543210?text=Caregiver%20Duty%20Assistance%20Needed"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="WhatsApp Coordinator"
-            aria-label="WhatsApp Coordinator"
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(37, 211, 102, 0.2)',
-              border: '1px solid rgba(37, 211, 102, 0.4)',
-              color: '#4ade80',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.316 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.818-.981z" />
-            </svg>
-          </a>
-        </div>
-      </section>
-
-      {/* Quick Action 1: Active Duty / Current Assignment */}
+      {/* Unified Hero Card: Current Duty Assignment & Shift Punch Action */}
       <section
         id="active-duty-card"
         className="glass-panel"
         style={{
           padding: '1.25rem',
-          border: '1px solid rgba(56, 189, 248, 0.25)',
-          background: 'rgba(15, 23, 42, 0.7)',
+          border: '1px solid #e2e8f0',
+          background: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+        {/* Card Header: Duty Title, Date & Details Link */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span
               style={{
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                backgroundColor: assignment ? '#38bdf8' : '#94a3b8',
-                boxShadow: assignment ? '0 0 8px #38bdf8' : 'none',
+                backgroundColor: assignment ? '#2563EB' : '#475569',
+                boxShadow: assignment ? '0 0 8px rgba(37, 99, 235, 0.4)' : 'none',
               }}
             />
-            <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
-              Current Assignment
-            </h2>
+            <div>
+              <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#172033', margin: 0 }}>
+                Today's Assignment
+              </h2>
+              <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.1rem' }}>
+                {todayDateFormatted}
+              </div>
+            </div>
           </div>
 
           <Link
@@ -442,86 +289,79 @@ export default function CaregiverPortalHomePage() {
             id="view-duty-details-link"
             style={{
               fontSize: '0.75rem',
-              color: 'var(--primary-400)',
+              color: '#2563EB',
               fontWeight: 600,
               textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.2rem',
             }}
           >
-            Details &rarr;
+            <span>Duty Details</span>
+            <span>&rarr;</span>
           </Link>
         </div>
 
+        {/* Patient & Care Details */}
         {assignment ? (
           <div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.2rem' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#172033', marginBottom: '0.25rem', lineHeight: 1.25 }}>
               {assignment.customer?.patientName || assignment.customer?.fullName || 'Patient Care'}
             </div>
-            <div style={{ fontSize: '0.825rem', color: '#38bdf8', marginBottom: '0.35rem' }}>
+            <div style={{ fontSize: '0.825rem', color: '#2563EB', fontWeight: 600, marginBottom: '0.4rem' }}>
               {assignment.customer?.serviceType || assignment.request?.serviceType || 'In-Home Healthcare'}
               {assignment.startDate ? ` • Started ${new Date(assignment.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : ''}
             </div>
-            <p style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
+            <p style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>
               📍 {assignment.customer?.address || assignment.customer?.careAddress || `${assignment.customer?.city || 'Kochi'}, ${assignment.customer?.district || 'Ernakulam'}`}
             </p>
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '0.75rem 0' }}>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+          <div style={{ textAlign: 'center', padding: '0.6rem 0' }}>
+            <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.35rem' }}>
               No active assignment in progress.
             </p>
             <span
               style={{
                 fontSize: '0.72rem',
-                color: '#34d399',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                padding: '0.2rem 0.55rem',
+                color: '#15803D',
+                backgroundColor: '#f0fdf4',
+                padding: '0.25rem 0.65rem',
                 borderRadius: 'var(--radius-full)',
+                fontWeight: 600,
+                border: '1px solid #bbf7d0',
+                display: 'inline-block',
               }}
             >
               Standby &bull; Available for dispatch
             </span>
           </div>
         )}
-      </section>
 
-      {/* Quick Action 2: Today's Attendance & Shift Punch */}
-      <section
-        id="today-attendance-card"
-        className="glass-panel"
-        style={{
-          padding: '1.25rem',
-          border: '1px solid rgba(20, 184, 166, 0.25)',
-          background: 'rgba(15, 23, 42, 0.7)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+        {/* Shift Punch Action Row */}
+        <div
+          id="today-attendance-card"
+          style={{
+            paddingTop: '0.9rem',
+            borderTop: '1px solid #f1f5f9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+          }}
+        >
           <div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Today &bull; {todayDateFormatted}
+            <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
+              Shift Status
             </div>
-            <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
-              Attendance & Shift Punch
-            </h2>
-          </div>
-
-          <Link
-            href="/portal/attendance"
-            id="view-attendance-link"
-            style={{
-              fontSize: '0.75rem',
-              color: 'var(--primary-400)',
-              fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
-            History &rarr;
-          </Link>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-          <div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Shift Status:</div>
-            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: attendance?.checkedIn ? '#34d399' : '#f59e0b', marginTop: '0.1rem' }}>
+            <div
+              style={{
+                fontSize: '0.925rem',
+                fontWeight: 700,
+                color: attendance?.checkedIn ? '#15803D' : '#D97706',
+                marginTop: '0.15rem',
+              }}
+            >
               {attendance?.checkedOut
                 ? 'Completed for Today'
                 : attendance?.checkedIn
@@ -534,19 +374,22 @@ export default function CaregiverPortalHomePage() {
             href="/portal/attendance"
             id="quick-punch-action-btn"
             style={{
-              padding: '0.55rem 1.1rem',
+              padding: '0.6rem 1.15rem',
               background: attendance?.checkedIn && !attendance?.checkedOut
-                ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                : 'linear-gradient(135deg, #14b8a6, #0d9488)',
+                ? 'linear-gradient(135deg, #f59e0b, #D97706)'
+                : 'linear-gradient(135deg, #3b82f6, #2563EB)',
               color: '#ffffff',
               borderRadius: 'var(--radius-md)',
               fontSize: '0.825rem',
               fontWeight: 700,
               textDecoration: 'none',
-              boxShadow: '0 4px 12px rgba(20, 184, 166, 0.3)',
+              boxShadow: attendance?.checkedIn && !attendance?.checkedOut
+                ? '0 4px 12px rgba(217, 119, 6, 0.28)'
+                : '0 4px 12px rgba(37, 99, 235, 0.28)',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.4rem',
+              gap: '0.45rem',
+              flexShrink: 0,
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
@@ -571,22 +414,22 @@ export default function CaregiverPortalHomePage() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: '1px solid #e2e8f0',
             transition: 'transform 0.2s',
           }}
         >
           <div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.72rem', color: '#475569', textTransform: 'uppercase' }}>
               Daily Rate
             </div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#34d399', margin: '0.2rem 0' }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#15803D', margin: '0.2rem 0' }}>
               ₹{profile?.dailyRate || 1000}
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '0.72rem', color: '#475569' }}>
               Per day payout
             </div>
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--primary-400)', fontWeight: 600, marginTop: '0.75rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#2563EB', fontWeight: 600, marginTop: '0.75rem' }}>
             Salary Statements &rarr;
           </div>
         </Link>
@@ -602,22 +445,22 @@ export default function CaregiverPortalHomePage() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: '1px solid #e2e8f0',
             transition: 'transform 0.2s',
           }}
         >
           <div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.72rem', color: '#475569', textTransform: 'uppercase' }}>
               Credentials
             </div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', margin: '0.2rem 0' }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#172033', margin: '0.2rem 0' }}>
               {profile?.documents ? `${profile.documents.filter(d => d.verified).length} Active` : 'Verified'}
             </div>
-            <div style={{ fontSize: '0.72rem', color: '#34d399' }}>
+            <div style={{ fontSize: '0.72rem', color: '#15803D' }}>
               ✓ KYC & Certs
             </div>
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--primary-400)', fontWeight: 600, marginTop: '0.75rem' }}>
+          <div style={{ fontSize: '0.75rem', color: '#2563EB', fontWeight: 600, marginTop: '0.75rem' }}>
             View Documents &rarr;
           </div>
         </Link>
@@ -627,8 +470,8 @@ export default function CaregiverPortalHomePage() {
       <section
         id="portal-pwa-install-card"
         style={{
-          backgroundColor: 'rgba(20, 184, 166, 0.08)',
-          border: '1px dashed rgba(20, 184, 166, 0.3)',
+          backgroundColor: '#f0fdfa',
+          border: '1px dashed #99f6e4',
           borderRadius: 'var(--radius-lg)',
           padding: '1rem',
           display: 'flex',
@@ -641,11 +484,11 @@ export default function CaregiverPortalHomePage() {
             width: '38px',
             height: '38px',
             borderRadius: '10px',
-            backgroundColor: 'rgba(20, 184, 166, 0.15)',
+            backgroundColor: '#ccfbf1',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#2dd4bf',
+            color: '#0F766E',
             flexShrink: 0,
           }}
         >
@@ -655,10 +498,10 @@ export default function CaregiverPortalHomePage() {
           </svg>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#ffffff' }}>
+          <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#172033' }}>
             Install on Mobile Screen
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: '0.72rem', color: '#475569' }}>
             One-tap launch with offline support from your home screen
           </div>
         </div>

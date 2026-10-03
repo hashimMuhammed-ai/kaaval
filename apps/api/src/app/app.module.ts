@@ -29,19 +29,27 @@ import { TenantResolutionMiddleware } from './common/middleware/tenant-resolutio
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '.env.example'],
+      envFilePath: ['.env', 'apps/api/.env'],
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('REDIS_HOST', 'localhost'),
-          port: parseInt(configService.get<string>('REDIS_PORT', '6379'), 10),
-          password: configService.get<string>('REDIS_PASSWORD') || undefined,
-          maxRetriesPerRequest: null,
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const redisUrl = configService.get<string>('REDIS_URL');
+        return {
+          connection: redisUrl
+            ? {
+                url: redisUrl,
+                maxRetriesPerRequest: null,
+              }
+            : {
+                host: configService.get<string>('REDIS_HOST', 'localhost'),
+                port: parseInt(configService.get<string>('REDIS_PORT', '6379'), 10),
+                password: configService.get<string>('REDIS_PASSWORD') || undefined,
+                maxRetriesPerRequest: null,
+              },
+        };
+      },
     }),
     DatabaseModule,
     TenantsModule,

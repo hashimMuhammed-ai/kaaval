@@ -25,7 +25,11 @@ export class Tenant {
   subdomain: string;
 
   @Index({ unique: true })
-  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
+  @Column({ name: 'tenant_slug', type: 'varchar', length: 63, unique: true, default: '' })
+  tenantSlug: string;
+
+  @Index({ unique: true })
+  @Column({ name: 'custom_domain', type: 'varchar', length: 255, nullable: true, unique: true })
   customDomain?: string | null;
 
   @Column({
@@ -56,9 +60,9 @@ export class Tenant {
   @OneToMany(() => Caregiver, (caregiver) => caregiver.tenant)
   caregivers?: Caregiver[];
 
-  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
 }

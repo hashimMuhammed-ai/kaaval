@@ -82,6 +82,7 @@ describe('TenantsService — Super Admin Tenant & Owner Provisioning', () => {
     expect(result.success).toBe(true);
     expect(result.tenant.name).toBe('Kochi Home Care');
     expect(result.tenant.subdomain).toBe('kochicare');
+    expect(result.tenant.tenantSlug).toBe('kochicare');
     expect(result.tenant.status).toBe(TenantStatus.ACTIVE);
 
     expect(result.owner.name).toBe('Mohan Lal');

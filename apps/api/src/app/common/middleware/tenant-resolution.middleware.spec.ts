@@ -13,6 +13,7 @@ describe('TenantResolutionMiddleware', () => {
     id: 'tenant-111',
     name: 'Care Kerala Agency',
     subdomain: 'carekerala',
+    tenantSlug: 'carekerala',
     status: TenantStatus.ACTIVE,
   };
 
@@ -44,7 +45,9 @@ describe('TenantResolutionMiddleware', () => {
     expect(mockRequest.tenant).toBe(mockTenant);
     expect(mockRequest.tenantId).toBe('tenant-111');
     expect(mockRequest.subdomain).toBe('carekerala');
+    expect(mockRequest.tenantSlug).toBe('carekerala');
     expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Resolved-Tenant', 'carekerala');
+    expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Resolved-Tenant-Slug', 'carekerala');
     expect(mockNext).toHaveBeenCalledWith();
   });
 

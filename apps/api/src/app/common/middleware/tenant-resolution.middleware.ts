@@ -36,10 +36,22 @@ export class TenantResolutionMiddleware implements NestMiddleware {
         req.tenant = tenant;
         req.tenantId = tenant.id;
         req.subdomain = tenant.subdomain;
+        req.tenantSlug = tenant.tenantSlug || tenant.subdomain;
 
-        // Traceability header
+        // Traceability headers
         if (res.setHeader && !res.headersSent) {
           res.setHeader('X-Resolved-Tenant', tenant.subdomain);
+          res.setHeader('X-Resolved-Tenant-Slug', tenant.tenantSlug || tenant.subdomain);
+        }
+
+        // Rewrite path if request came in as /api/t/:tenantSlug or /t/:tenantSlug
+        // so NestJS route matching finds the registered controller routes
+        if (req.url) {
+          if (req.url.match(/^\/api\/t\/[a-zA-Z0-9_-]+/i)) {
+            req.url = req.url.replace(/^\/api\/t\/[a-zA-Z0-9_-]+/, '/api');
+          } else if (req.url.match(/^\/t\/[a-zA-Z0-9_-]+/i)) {
+            req.url = req.url.replace(/^\/t\/[a-zA-Z0-9_-]+/, '');
+          }
         }
 
         // Cross-tenant access validation:

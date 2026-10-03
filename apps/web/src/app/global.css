@@ -266,6 +266,11 @@ button, input, select, textarea {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes pulseGlow {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
@@ -413,3 +418,199 @@ button, input, select, textarea {
   color: var(--primary-400);
 }
 
+/* ==========================================================================
+   Caregiver PWA Light Theme (Scoped to Caregiver Portal)
+   ========================================================================== */
+#caregiver-portal-root {
+  --bg-deep: #F8FAFC;
+  --bg-primary: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #F8FAFC;
+  --bg-glass: rgba(255, 255, 255, 0.95);
+  --bg-glass-card: #ffffff;
+
+  --border-subtle: #e2e8f0;
+  --border-card: #e2e8f0;
+  --border-focus: #2563EB;
+
+  --text-main: #172033;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 25px -4px rgba(0, 0, 0, 0.08);
+
+  /* Primary Action: Blue #2563EB */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-400: #60a5fa;
+  --primary-500: #2563EB;
+  --primary-600: #1d4ed8;
+  --primary-700: #1e40af;
+
+  /* Secondary: Teal #0F766E */
+  --secondary-50: #f0fdfa;
+  --secondary-100: #ccfbf1;
+  --secondary-400: #2dd4bf;
+  --secondary-500: #0F766E;
+  --secondary-600: #115e59;
+
+  /* Functional Status */
+  --status-success: #15803D;
+  --status-warning: #D97706;
+  --status-danger: #DC2626;
+}
+
+#caregiver-portal-root .glass-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03) !important;
+  color: #172033 !important;
+}
+
+#caregiver-portal-root h1,
+#caregiver-portal-root h2,
+#caregiver-portal-root h3,
+#caregiver-portal-root h4 {
+  color: #172033 !important;
+}
+
+#caregiver-portal-root textarea,
+#caregiver-portal-root input,
+#caregiver-portal-root select {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #172033 !important;
+}
+
+/* ==========================================================================
+   Responsive Utilities for Mobile-First Office Staff Dashboard
+   ========================================================================== */
+@media (max-width: 768px) {
+  .dashboard-desktop-nav {
+    display: none !important;
+  }
+  .dashboard-mobile-nav {
+    display: flex !important;
+  }
+  .dashboard-mobile-header {
+    height: 56px !important;
+    padding: 0 1rem !important;
+  }
+  .dashboard-main-content {
+    padding: 1rem 0.85rem calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .desktop-only,
+  .hide-on-mobile,
+  .show-on-desktop,
+  .show-on-desktop-block {
+    display: none !important;
+  }
+  .show-on-mobile {
+    display: flex !important;
+  }
+  .show-on-mobile-block {
+    display: block !important;
+  }
+  .mobile-scroll-x {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+  }
+  .mobile-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .dashboard-desktop-nav {
+    display: flex !important;
+  }
+  .dashboard-mobile-nav {
+    display: none !important;
+  }
+  .dashboard-mobile-drawer {
+    display: none !important;
+  }
+  .desktop-only {
+    display: block !important;
+  }
+  .hide-on-desktop,
+  .show-on-mobile,
+  .show-on-mobile-block {
+    display: none !important;
+  }
+  .show-on-desktop {
+    display: flex !important;
+  }
+  .show-on-desktop-block {
+    display: block !important;
+  }
+}
+
+/* Matching layout responsive rules */
+.matching-layout-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .matching-layout-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+.touch-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+  touch-action: manipulation;
+}
+
+.touch-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-400);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.6);
+  border: 2px solid #ffffff;
+}
+
+.touch-range-slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-400);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.6);
+  border: 2px solid #ffffff;
+}
+
+/* Responsive Form Container & Single-Column Mobile Layout */
+.responsive-form-container {
+  padding: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .responsive-form-container {
+    padding: 1.25rem 0.85rem !important;
+  }
+  .form-grid-span-2 {
+    grid-column: span 1 !important;
+  }
+}

@@ -278,4 +278,38 @@ describe('Smart Matching UI Component', () => {
       expect(screen.getByRole('button', { name: /Expand Radius to 50 km/i })).toBeTruthy();
     });
   });
+
+  it('should support touch-friendly radius range slider and mobile 1-tap call/whatsapp actions', async () => {
+    render(<SmartMatchingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Sunitha Kumari')).toBeTruthy();
+    });
+
+    // Check thumb-friendly range slider
+    const radiusSlider = document.getElementById('filter-radius-slider') as HTMLInputElement;
+    expect(radiusSlider).toBeTruthy();
+    expect(radiusSlider.type).toBe('range');
+
+    fireEvent.change(radiusSlider, { target: { value: '50' } });
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        expect.stringContaining('radiusKm=50')
+      );
+    });
+
+    // Check 1-tap direct phone call and WhatsApp actions
+    const callLink = document.getElementById('mobile-match-call-cg-1');
+    expect(callLink).toBeTruthy();
+    expect(callLink?.getAttribute('href')).toBe('tel:+919847111222');
+
+    const waLink = document.getElementById('mobile-match-wa-cg-1');
+    expect(waLink).toBeTruthy();
+    expect(waLink?.getAttribute('href')).toContain('wa.me/919847111222');
+
+    // Check 1-tap assign button
+    const assignBtn = document.getElementById('btn-assign-cg-1');
+    expect(assignBtn).toBeTruthy();
+  });
 });

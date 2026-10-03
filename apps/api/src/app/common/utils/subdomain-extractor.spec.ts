@@ -65,6 +65,15 @@ describe('SubdomainExtractor', () => {
       ).toBeNull();
     });
 
+    it('should return null for free-tier cloud deployment platforms (vercel.app, onrender.com)', () => {
+      expect(
+        SubdomainExtractor.extract('kaaval-web.vercel.app', baseDomain)
+      ).toBeNull();
+      expect(
+        SubdomainExtractor.extract('caregiver-api.onrender.com', baseDomain)
+      ).toBeNull();
+    });
+
     it('should return null for invalid, empty, or undefined input', () => {
       expect(SubdomainExtractor.extract(null)).toBeNull();
       expect(SubdomainExtractor.extract(undefined)).toBeNull();

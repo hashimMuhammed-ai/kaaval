@@ -105,4 +105,18 @@ describe('StorageService', () => {
     const url = s3Service.resolveFileUrl('tenants/1/caregivers/2/cert.pdf', '2', 'doc-2');
     expect(url).toContain('https://s3.ap-south-1.amazonaws.com/tenants/1/caregivers/2/cert.pdf');
   });
+
+  it('should configure Cloudflare R2 storage when R2 credentials are provided', () => {
+    const r2Config: any = {
+      get: jest.fn((key: string) => {
+        if (key === 'R2_ACCOUNT_ID') return 'mock-cf-account-id';
+        if (key === 'R2_BUCKET_NAME') return 'caregiver-r2-docs';
+        return null;
+      }),
+    };
+
+    const r2Service = new StorageService(r2Config);
+    const url = r2Service.resolveFileUrl('tenants/1/caregivers/2/cert.pdf', '2');
+    expect(url).toBe('https://mock-cf-account-id.r2.cloudflarestorage.com/caregiver-r2-docs/tenants/1/caregivers/2/cert.pdf');
+  });
 });

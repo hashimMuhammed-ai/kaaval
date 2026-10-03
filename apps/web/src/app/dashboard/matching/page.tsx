@@ -532,7 +532,7 @@ function MatchingPageContent() {
       </div>
 
       {/* Main Layout: Left Filter Panel & Right Results Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="matching-layout-grid">
         {/* Left Filter Card */}
         <aside
           id="matching-filter-panel"
@@ -618,11 +618,32 @@ function MatchingPageContent() {
               <label className="form-label" style={{ fontSize: '0.8rem', margin: 0 }}>
                 Spatial Radius (PostGIS GiST)
               </label>
-              <span style={{ fontSize: '0.8rem', color: '#2dd4bf', fontWeight: 700 }}>
+              <span style={{ fontSize: '0.85rem', color: '#2dd4bf', fontWeight: 700 }}>
                 {radiusKm} km
               </span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.35rem', marginTop: '0.4rem' }}>
+
+            {/* Thumb-friendly Range Slider */}
+            <div style={{ margin: '0.5rem 0 0.65rem 0' }}>
+              <input
+                id="filter-radius-slider"
+                type="range"
+                min="5"
+                max="100"
+                step="5"
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(parseInt(e.target.value, 10))}
+                className="touch-range-slider"
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                <span>5 km</span>
+                <span>25 km</span>
+                <span>50 km</span>
+                <span>100 km</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem', marginTop: '0.4rem' }}>
               {RADIUS_OPTIONS.map((r) => (
                 <button
                   key={r}
@@ -630,14 +651,18 @@ function MatchingPageContent() {
                   id={`btn-radius-${r}`}
                   onClick={() => setRadiusKm(r)}
                   style={{
-                    padding: '0.4rem',
-                    fontSize: '0.75rem',
+                    padding: '0.45rem 0.25rem',
+                    minHeight: '42px',
+                    fontSize: '0.78rem',
                     fontWeight: radiusKm === r ? 700 : 500,
                     borderRadius: 'var(--radius-md)',
                     border: radiusKm === r ? '1px solid #14b8a6' : '1px solid var(--border-card)',
-                    backgroundColor: radiusKm === r ? 'rgba(20, 184, 166, 0.2)' : 'rgba(15, 23, 42, 0.5)',
+                    backgroundColor: radiusKm === r ? 'rgba(20, 184, 166, 0.25)' : 'rgba(15, 23, 42, 0.5)',
                     color: radiusKm === r ? '#ffffff' : 'var(--text-secondary)',
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   {r} km
@@ -651,7 +676,7 @@ function MatchingPageContent() {
             <label className="form-label" style={{ fontSize: '0.8rem', marginBottom: '0.35rem' }}>
               Gender Preference
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.35rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
               {[
                 { key: 'any', label: 'Any' },
                 { key: 'female', label: 'Female' },
@@ -663,14 +688,18 @@ function MatchingPageContent() {
                   id={`filter-gender-${g.key}`}
                   onClick={() => setGender(g.key)}
                   style={{
-                    padding: '0.4rem',
-                    fontSize: '0.75rem',
+                    padding: '0.45rem 0.25rem',
+                    minHeight: '42px',
+                    fontSize: '0.78rem',
                     fontWeight: gender.toLowerCase() === g.key ? 700 : 500,
                     borderRadius: 'var(--radius-md)',
                     border: gender.toLowerCase() === g.key ? '1px solid #14b8a6' : '1px solid var(--border-card)',
-                    backgroundColor: gender.toLowerCase() === g.key ? 'rgba(20, 184, 166, 0.2)' : 'rgba(15, 23, 42, 0.5)',
+                    backgroundColor: gender.toLowerCase() === g.key ? 'rgba(20, 184, 166, 0.25)' : 'rgba(15, 23, 42, 0.5)',
                     color: gender.toLowerCase() === g.key ? '#ffffff' : 'var(--text-secondary)',
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   {g.label}
@@ -706,7 +735,7 @@ function MatchingPageContent() {
             <label className="form-label" style={{ fontSize: '0.8rem', marginBottom: '0.35rem' }}>
               Care Competencies & Skills
             </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', maxHeight: '180px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', maxHeight: '180px', overflowY: 'auto' }}>
               {COMMON_SKILLS.map((skill) => {
                 const isSelected = selectedSkills.includes(skill);
                 return (
@@ -715,15 +744,19 @@ function MatchingPageContent() {
                     type="button"
                     onClick={() => toggleSkill(skill)}
                     style={{
-                      padding: '0.3rem 0.6rem',
+                      padding: '0.4rem 0.7rem',
+                      minHeight: '36px',
                       borderRadius: 'var(--radius-full)',
-                      fontSize: '0.72rem',
+                      fontSize: '0.75rem',
                       fontWeight: isSelected ? 600 : 400,
                       backgroundColor: isSelected ? '#14b8a6' : 'rgba(255, 255, 255, 0.05)',
                       color: isSelected ? '#ffffff' : 'var(--text-secondary)',
                       border: isSelected ? '1px solid #14b8a6' : '1px solid var(--border-card)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
                     }}
                   >
                     {isSelected ? '✓ ' : ''}{skill}
@@ -1167,66 +1200,104 @@ function MatchingPageContent() {
                       </p>
                     )}
 
-                    {/* Action Buttons */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-card)', paddingTop: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <a
-                          href={`tel:${cg.phone}`}
-                          className="btn-secondary"
-                          style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-                        >
-                          <span>📞</span> Call
-                        </a>
-                        <a
-                          href={`https://wa.me/${cg.phone.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-secondary"
-                          style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-                        >
-                          <span>💬</span> WhatsApp
-                        </a>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                          onClick={() => setSelectedCaregiverModal(cg)}
-                          className="btn-secondary"
-                          style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
-                        >
-                          View Profile
-                        </button>
-                        <button
-                          onClick={() => handleAssignCaregiver(cg)}
-                          disabled={assigningId === cg.id}
-                          className="btn-primary"
-                          id={`btn-assign-${cg.id}`}
-                          style={{
-                            fontSize: '0.8rem',
-                            padding: '0.4rem 1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            backgroundColor: assignmentId ? '#f59e0b' : undefined,
-                            borderColor: assignmentId ? '#d97706' : undefined,
-                          }}
-                        >
-                          {assigningId === cg.id ? (
-                            <span>{assignmentId ? 'Replacing...' : 'Assigning...'}</span>
-                          ) : (
-                            <>
-                              <span>{assignmentId ? '🔄' : '✓'}</span>
-                              <span>
-                                {assignmentId
-                                  ? 'Assign as Replacement'
-                                  : requestId || customerId
-                                  ? 'Assign to Patient'
-                                  : 'Select for Assignment'}
-                              </span>
-                            </>
-                          )}
-                        </button>
-                      </div>
+                    {/* Action Buttons: Responsive & Touch-friendly */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                        gap: '0.5rem',
+                        borderTop: '1px solid var(--border-card)',
+                        paddingTop: '0.85rem',
+                      }}
+                    >
+                      <a
+                        href={`tel:${cg.phone}`}
+                        id={`mobile-match-call-${cg.id}`}
+                        className="btn-secondary"
+                        style={{
+                          fontSize: '0.825rem',
+                          padding: '0.55rem 0.75rem',
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.4rem',
+                          borderRadius: 'var(--radius-md)',
+                        }}
+                      >
+                        <span>📞</span> Call
+                      </a>
+                      <a
+                        href={`https://wa.me/${cg.phone.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        id={`mobile-match-wa-${cg.id}`}
+                        className="btn-secondary"
+                        style={{
+                          fontSize: '0.825rem',
+                          padding: '0.55rem 0.75rem',
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.4rem',
+                          borderRadius: 'var(--radius-md)',
+                          color: '#22c55e',
+                          borderColor: 'rgba(34, 197, 94, 0.4)',
+                        }}
+                      >
+                        <span>💬</span> WhatsApp
+                      </a>
+                      <button
+                        onClick={() => setSelectedCaregiverModal(cg)}
+                        id={`mobile-match-profile-${cg.id}`}
+                        className="btn-secondary"
+                        style={{
+                          fontSize: '0.825rem',
+                          padding: '0.55rem 0.75rem',
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: 'var(--radius-md)',
+                        }}
+                      >
+                        View Profile
+                      </button>
+                      <button
+                        onClick={() => handleAssignCaregiver(cg)}
+                        disabled={assigningId === cg.id}
+                        className="btn-primary"
+                        id={`btn-assign-${cg.id}`}
+                        style={{
+                          fontSize: '0.825rem',
+                          padding: '0.55rem 1rem',
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.4rem',
+                          fontWeight: 700,
+                          backgroundColor: assignmentId ? '#f59e0b' : undefined,
+                          borderColor: assignmentId ? '#d97706' : undefined,
+                          borderRadius: 'var(--radius-md)',
+                        }}
+                      >
+                        {assigningId === cg.id ? (
+                          <span>{assignmentId ? 'Replacing...' : 'Assigning...'}</span>
+                        ) : (
+                          <>
+                            <span>{assignmentId ? '🔄' : '✓'}</span>
+                            <span>
+                              {assignmentId
+                                ? 'Assign as Replacement'
+                                : requestId || customerId
+                                ? 'Assign to Patient'
+                                : 'Select for Assignment'}
+                            </span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 );

@@ -178,10 +178,10 @@ export default function CaregiverAssignmentPage() {
         id="assignment-tabs"
         style={{
           display: 'flex',
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          backgroundColor: '#f1f5f9',
           borderRadius: 'var(--radius-lg)',
           padding: '0.25rem',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          border: '1px solid #e2e8f0',
         }}
       >
         <button
@@ -193,12 +193,12 @@ export default function CaregiverAssignmentPage() {
             borderRadius: 'var(--radius-md)',
             border: 'none',
             backgroundColor: viewTab === 'active' ? 'var(--primary-600)' : 'transparent',
-            color: viewTab === 'active' ? '#ffffff' : 'var(--text-secondary)',
+            color: viewTab === 'active' ? '#ffffff' : '#64748b',
             fontWeight: 700,
             fontSize: '0.825rem',
             cursor: 'pointer',
             transition: 'all 0.2s',
-            boxShadow: viewTab === 'active' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+            boxShadow: viewTab === 'active' ? '0 2px 6px rgba(13, 148, 136, 0.25)' : 'none',
           }}
         >
           Active Duty {activeAssignment ? '●' : ''}
@@ -213,12 +213,12 @@ export default function CaregiverAssignmentPage() {
             borderRadius: 'var(--radius-md)',
             border: 'none',
             backgroundColor: viewTab === 'history' ? 'var(--primary-600)' : 'transparent',
-            color: viewTab === 'history' ? '#ffffff' : 'var(--text-secondary)',
+            color: viewTab === 'history' ? '#ffffff' : '#64748b',
             fontWeight: 700,
             fontSize: '0.825rem',
             cursor: 'pointer',
             transition: 'all 0.2s',
-            boxShadow: viewTab === 'history' ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+            boxShadow: viewTab === 'history' ? '0 2px 6px rgba(13, 148, 136, 0.25)' : 'none',
           }}
         >
           Duty History ({assignmentHistory.length})
@@ -239,8 +239,8 @@ export default function CaregiverAssignmentPage() {
               className="glass-panel"
               style={{
                 padding: '1.35rem',
-                border: '1px solid rgba(56, 189, 248, 0.35)',
-                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(17, 26, 46, 0.95))',
+                border: '1px solid #bfdbfe',
+                background: 'linear-gradient(135deg, #ffffff, #eff6ff)',
                 position: 'relative',
                 overflow: 'hidden',
               }}
@@ -258,7 +258,7 @@ export default function CaregiverAssignmentPage() {
                   <div
                     style={{
                       fontSize: '0.72rem',
-                      color: '#38bdf8',
+                      color: '#2563EB',
                       textTransform: 'uppercase',
                       fontWeight: 700,
                       letterSpacing: '0.05em',
@@ -272,14 +272,14 @@ export default function CaregiverAssignmentPage() {
                     style={{
                       fontSize: '1.35rem',
                       fontWeight: 800,
-                      color: '#ffffff',
+                      color: '#172033',
                       lineHeight: 1.25,
                     }}
                   >
                     {patientDisplayName}
                   </h2>
                   {(customer?.patientAge || customer?.patientGender) && (
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.25rem' }}>
                       {customer?.patientAge ? `${customer.patientAge} yrs` : ''}
                       {customer?.patientAge && customer?.patientGender ? ' • ' : ''}
                       {customer?.patientGender && customer.patientGender !== 'unspecified'
@@ -292,9 +292,9 @@ export default function CaregiverAssignmentPage() {
                 <div
                   id="duty-status-badge"
                   style={{
-                    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                    color: '#38bdf8',
-                    border: '1px solid rgba(56, 189, 248, 0.35)',
+                    backgroundColor: '#eff6ff',
+                    color: '#2563EB',
+                    border: '1px solid #bfdbfe',
                     padding: '0.35rem 0.75rem',
                     borderRadius: 'var(--radius-full)',
                     fontSize: '0.75rem',
@@ -310,8 +310,8 @@ export default function CaregiverAssignmentPage() {
                       width: '7px',
                       height: '7px',
                       borderRadius: '50%',
-                      backgroundColor: '#38bdf8',
-                      boxShadow: '0 0 6px #38bdf8',
+                      backgroundColor: '#2563EB',
+                      boxShadow: '0 0 6px rgba(37, 99, 235, 0.4)',
                     }}
                   />
                   <span>Active Duty</span>
@@ -325,33 +325,33 @@ export default function CaregiverAssignmentPage() {
                   gridTemplateColumns: '1fr 1fr',
                   gap: '0.65rem',
                   paddingTop: '0.75rem',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderTop: '1px solid #e2e8f0',
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Service Scope</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc', marginTop: '0.1rem' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#475569' }}>Service Scope</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#172033', marginTop: '0.1rem' }}>
                     {serviceTypeDisplayName}
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Daily Rate</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#34d399', marginTop: '0.1rem' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#475569' }}>Daily Rate</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#15803D', marginTop: '0.1rem' }}>
                     ₹{activeAssignment.caregiverDailyRate || activeAssignment.caregiver?.dailyRate || 1200} / day
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Duty Duration</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc', marginTop: '0.1rem' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#475569' }}>Duty Duration</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#172033', marginTop: '0.1rem' }}>
                     Day {getDaysElapsed(activeAssignment.startDate)} on duty
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Engagement</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc', marginTop: '0.1rem' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#475569' }}>Engagement</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#172033', marginTop: '0.1rem' }}>
                     {customer?.engagementPeriod || 'Ongoing'}
                   </div>
                 </div>
@@ -364,7 +364,7 @@ export default function CaregiverAssignmentPage() {
               className="glass-panel"
               style={{
                 padding: '1.25rem',
-                border: '1px solid rgba(20, 184, 166, 0.25)',
+                border: '1px solid #e2e8f0',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -373,11 +373,11 @@ export default function CaregiverAssignmentPage() {
                     width: '28px',
                     height: '28px',
                     borderRadius: '8px',
-                    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+                    backgroundColor: '#eff6ff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#2dd4bf',
+                    color: '#2563EB',
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -385,7 +385,7 @@ export default function CaregiverAssignmentPage() {
                     <circle cx="12" cy="10" r="3" />
                   </svg>
                 </div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#172033' }}>
                   Care Location & Address
                 </h3>
               </div>
@@ -394,7 +394,7 @@ export default function CaregiverAssignmentPage() {
                 id="care-address-text"
                 style={{
                   fontSize: '0.85rem',
-                  color: '#e2e8f0',
+                  color: '#172033',
                   lineHeight: 1.45,
                   marginBottom: '1rem',
                 }}
@@ -411,7 +411,7 @@ export default function CaregiverAssignmentPage() {
                   style={{
                     flex: 1,
                     padding: '0.6rem 0.85rem',
-                    background: 'linear-gradient(135deg, #14b8a6, #0d9488)',
+                    background: 'linear-gradient(135deg, #3b82f6, #2563EB)',
                     color: '#ffffff',
                     borderRadius: 'var(--radius-md)',
                     fontSize: '0.8rem',
@@ -421,7 +421,7 @@ export default function CaregiverAssignmentPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.4rem',
-                    boxShadow: '0 2px 10px rgba(20, 184, 166, 0.3)',
+                    boxShadow: '0 2px 10px rgba(37, 99, 235, 0.25)',
                   }}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -436,9 +436,9 @@ export default function CaregiverAssignmentPage() {
                   onClick={handleCopyAddress}
                   style={{
                     padding: '0.6rem 0.85rem',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: copied ? '#34d399' : '#cbd5e1',
+                    backgroundColor: '#F8FAFC',
+                    border: '1px solid #cbd5e1',
+                    color: copied ? '#15803D' : '#475569',
                     borderRadius: 'var(--radius-md)',
                     fontSize: '0.8rem',
                     fontWeight: 600,
@@ -463,7 +463,7 @@ export default function CaregiverAssignmentPage() {
               className="glass-panel"
               style={{
                 padding: '1.25rem',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid #e2e8f0',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -472,11 +472,11 @@ export default function CaregiverAssignmentPage() {
                     width: '28px',
                     height: '28px',
                     borderRadius: '8px',
-                    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                    backgroundColor: '#eff6ff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#38bdf8',
+                    color: '#2563EB',
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -486,21 +486,21 @@ export default function CaregiverAssignmentPage() {
                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#172033' }}>
                   Family & Primary Contact
                 </h3>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <div>
-                  <div id="primary-contact-name" style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+                  <div id="primary-contact-name" style={{ fontSize: '0.95rem', fontWeight: 700, color: '#172033' }}>
                     {customer?.primaryContactName || 'Family Representative'}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#475569' }}>
                     {customer?.relationship ? `Relationship: ${customer.relationship}` : 'Emergency Guardian'}
                   </div>
                   {customer?.phone && (
-                    <div style={{ fontSize: '0.85rem', color: 'var(--primary-400)', marginTop: '0.2rem', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.85rem', color: '#2563EB', marginTop: '0.2rem', fontWeight: 600 }}>
                       📞 {customer.phone}
                     </div>
                   )}
@@ -515,9 +515,9 @@ export default function CaregiverAssignmentPage() {
                     style={{
                       flex: 1,
                       padding: '0.6rem',
-                      background: 'rgba(56, 189, 248, 0.15)',
-                      border: '1px solid rgba(56, 189, 248, 0.35)',
-                      color: '#38bdf8',
+                      background: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      color: '#2563EB',
                       borderRadius: 'var(--radius-md)',
                       fontSize: '0.8rem',
                       fontWeight: 700,
@@ -544,9 +544,9 @@ export default function CaregiverAssignmentPage() {
                     style={{
                       flex: 1,
                       padding: '0.6rem',
-                      background: 'rgba(37, 211, 102, 0.15)',
-                      border: '1px solid rgba(37, 211, 102, 0.35)',
-                      color: '#4ade80',
+                      background: '#f0fdfa',
+                      border: '1px solid #ccfbf1',
+                      color: '#0F766E',
                       borderRadius: 'var(--radius-md)',
                       fontSize: '0.8rem',
                       fontWeight: 700,
@@ -572,7 +572,7 @@ export default function CaregiverAssignmentPage() {
               className="glass-panel"
               style={{
                 padding: '1.25rem',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid #e2e8f0',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -581,52 +581,52 @@ export default function CaregiverAssignmentPage() {
                     width: '28px',
                     height: '28px',
                     borderRadius: '8px',
-                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    backgroundColor: '#fee2e2',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#f87171',
+                    color: '#DC2626',
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                   </svg>
                 </div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#172033' }}>
                   Medical & Mobility Profile
                 </h3>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Condition / Diagnosis</div>
-                  <div id="patient-condition-text" style={{ fontSize: '0.85rem', color: '#f8fafc', marginTop: '0.15rem' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#475569' }}>Condition / Diagnosis</div>
+                  <div id="patient-condition-text" style={{ fontSize: '0.85rem', color: '#172033', marginTop: '0.15rem' }}>
                     {customer?.patientCondition || 'Post-operative recovery / Geriatric assistance'}
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
                   <div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Mobility Status</div>
-                    <div style={{ fontSize: '0.825rem', color: '#38bdf8', fontWeight: 600, marginTop: '0.15rem' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#475569' }}>Mobility Status</div>
+                    <div style={{ fontSize: '0.825rem', color: '#2563EB', fontWeight: 600, marginTop: '0.15rem' }}>
                       {customer?.mobilityStatus ? customer.mobilityStatus.replace('_', ' ') : 'Assisted'}
                     </div>
                   </div>
 
                   <div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Equipment Needed</div>
-                    <div style={{ fontSize: '0.825rem', color: '#cbd5e1', fontWeight: 600, marginTop: '0.15rem' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#475569' }}>Equipment Needed</div>
+                    <div style={{ fontSize: '0.825rem', color: '#475569', fontWeight: 600, marginTop: '0.15rem' }}>
                       {customer?.medicalEquipment || 'Standard Nursing'}
                     </div>
                   </div>
                 </div>
 
                 {(activeAssignment.notes || customer?.notes) && (
-                  <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.25)', padding: '0.65rem', borderRadius: 'var(--radius-sm)' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #e2e8f0', padding: '0.65rem', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#475569', textTransform: 'uppercase' }}>
                       Special Duty Notes
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.2rem', lineHeight: 1.4 }}>
+                    <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.2rem', lineHeight: 1.4 }}>
                       {activeAssignment.notes || customer?.notes}
                     </div>
                   </div>
@@ -640,7 +640,7 @@ export default function CaregiverAssignmentPage() {
               className="glass-panel"
               style={{
                 padding: '1.25rem',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: '1px solid #e2e8f0',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
@@ -649,11 +649,11 @@ export default function CaregiverAssignmentPage() {
                     width: '28px',
                     height: '28px',
                     borderRadius: '8px',
-                    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                    backgroundColor: '#fffbeb',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#fbbf24',
+                    color: '#D97706',
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -663,22 +663,22 @@ export default function CaregiverAssignmentPage() {
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                 </div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff' }}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#172033' }}>
                   Duty Schedule & Timeline
                 </h3>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Start Date</div>
-                  <div id="duty-start-date" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ffffff', marginTop: '0.15rem' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#475569' }}>Start Date</div>
+                  <div id="duty-start-date" style={{ fontSize: '0.85rem', fontWeight: 600, color: '#172033', marginTop: '0.15rem' }}>
                     {activeAssignment.startDate ? new Date(activeAssignment.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Active'}
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Target Completion</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8', marginTop: '0.15rem' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#475569' }}>Target Completion</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#2563EB', marginTop: '0.15rem' }}>
                     {activeAssignment.endDate ? new Date(activeAssignment.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Ongoing / Open'}
                   </div>
                 </div>
@@ -697,7 +697,8 @@ export default function CaregiverAssignmentPage() {
               flexDirection: 'column',
               alignItems: 'center',
               gap: '1rem',
-              border: '1px solid rgba(20, 184, 166, 0.25)',
+              border: '1px solid #ccfbf1',
+              background: 'linear-gradient(135deg, #ffffff, #f0fdfa)',
             }}
           >
             <div
@@ -709,8 +710,8 @@ export default function CaregiverAssignmentPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#2dd4bf',
-                boxShadow: '0 0 20px rgba(20, 184, 166, 0.25)',
+                color: '#0d9488',
+                boxShadow: '0 0 20px rgba(20, 184, 166, 0.15)',
               }}
             >
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -720,10 +721,10 @@ export default function CaregiverAssignmentPage() {
             </div>
 
             <div>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.35rem' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#172033', marginBottom: '0.35rem' }}>
                 You Are Currently on Standby
               </h2>
-              <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', lineHeight: 1.5, maxWidth: '340px' }}>
+              <p style={{ fontSize: '0.825rem', color: '#475569', lineHeight: 1.5, maxWidth: '340px' }}>
                 Your profile is active and available for matching. Your agency coordinator will allocate your next care assignment and dispatch details via WhatsApp.
               </p>
             </div>
@@ -733,9 +734,9 @@ export default function CaregiverAssignmentPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                color: '#34d399',
-                border: '1px solid rgba(16, 185, 129, 0.35)',
+                backgroundColor: '#f0fdf4',
+                color: '#15803D',
+                border: '1px solid #bbf7d0',
                 padding: '0.35rem 0.85rem',
                 borderRadius: 'var(--radius-full)',
                 fontSize: '0.78rem',
@@ -747,8 +748,8 @@ export default function CaregiverAssignmentPage() {
                   width: '7px',
                   height: '7px',
                   borderRadius: '50%',
-                  backgroundColor: '#34d399',
-                  boxShadow: '0 0 6px #34d399',
+                  backgroundColor: '#15803D',
+                  boxShadow: '0 0 6px #15803D',
                 }}
               />
               <span>Available for New Duty</span>
@@ -762,9 +763,9 @@ export default function CaregiverAssignmentPage() {
               style={{
                 marginTop: '0.5rem',
                 padding: '0.65rem 1.25rem',
-                backgroundColor: 'rgba(37, 211, 102, 0.15)',
-                border: '1px solid rgba(37, 211, 102, 0.4)',
-                color: '#4ade80',
+                backgroundColor: '#f0fdfa',
+                border: '1px solid #ccfbf1',
+                color: '#0F766E',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.8rem',
                 fontWeight: 700,
@@ -791,11 +792,11 @@ export default function CaregiverAssignmentPage() {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.4rem',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: '1px solid #e2e8f0',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '0.925rem', fontWeight: 700, color: '#ffffff' }}>
+                  <div style={{ fontSize: '0.925rem', fontWeight: 700, color: '#172033' }}>
                     {item.customer?.patientName || item.customer?.fullName || 'Patient Care Duty'}
                   </div>
                   <span
@@ -805,9 +806,9 @@ export default function CaregiverAssignmentPage() {
                       textTransform: 'uppercase',
                       padding: '0.2rem 0.5rem',
                       borderRadius: 'var(--radius-full)',
-                      backgroundColor: item.status === 'active' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                      color: item.status === 'active' ? '#38bdf8' : '#94a3b8',
-                      border: item.status === 'active' ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid rgba(148, 163, 184, 0.35)',
+                      backgroundColor: item.status === 'active' ? '#eff6ff' : '#F8FAFC',
+                      color: item.status === 'active' ? '#2563EB' : '#475569',
+                      border: item.status === 'active' ? '1px solid #bfdbfe' : '1px solid #cbd5e1',
                     }}
                   >
                     {item.status}

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { getSubdomain } from '../utils/subdomain';
+import { getSubdomain, getTenantSlug, tenantPath } from '../utils/subdomain';
 
 interface NavbarProps {
   agencyName?: string;
@@ -21,7 +21,7 @@ export default function Navbar({
   const pathname = usePathname();
 
   useEffect(() => {
-    const sub = getSubdomain();
+    const sub = getTenantSlug() || getSubdomain();
     setSubdomain(sub);
     if (sub) {
       // Format friendly name from subdomain if not supplied
@@ -70,7 +70,7 @@ export default function Navbar({
       >
         {/* Brand / Agency Logo */}
         <Link
-          href="/"
+          href={tenantPath('/')}
           id="brand-logo"
           style={{
             display: 'flex',
@@ -145,7 +145,7 @@ export default function Navbar({
             return (
               <Link
                 key={link.href}
-                href={link.href}
+                href={tenantPath(link.href)}
                 id={link.id}
                 style={{
                   padding: '0.5rem 0.95rem',
@@ -188,7 +188,7 @@ export default function Navbar({
 
           {/* Portal / Staff Login (No public registration link) */}
           <Link
-            href="/login"
+            href={tenantPath('/login')}
             id="nav-login-btn"
             className="btn-secondary"
             style={{
@@ -271,7 +271,7 @@ export default function Navbar({
             return (
               <Link
                 key={link.href}
-                href={link.href}
+                href={tenantPath(link.href)}
                 id={`mobile-${link.id}`}
                 onClick={() => setMobileMenuOpen(false)}
                 style={{
@@ -331,7 +331,7 @@ export default function Navbar({
             </a>
 
             <Link
-              href="/login"
+              href={tenantPath('/login')}
               id="mobile-nav-login-btn"
               onClick={() => setMobileMenuOpen(false)}
               className="btn-secondary"

@@ -461,7 +461,16 @@ export default function DashboardRequestsPage() {
         }}
       >
         {/* Status Tabs */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.85rem' }}>
+        <div
+          className="mobile-scroll-x"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            paddingBottom: '0.85rem',
+          }}
+        >
           {[
             { id: 'all', label: 'All Requests', count: stats.total },
             { id: 'pending', label: 'Pending Review', count: stats.pending },
@@ -489,6 +498,8 @@ export default function DashboardRequestsPage() {
                   alignItems: 'center',
                   gap: '0.45rem',
                   transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 <span>{tab.label}</span>
@@ -584,8 +595,10 @@ export default function DashboardRequestsPage() {
             </Link>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+          <>
+            {/* Desktop Table View */}
+            <div className="desktop-only" style={{ overflowX: 'auto', width: '100%' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
               <thead>
                 <tr
                   style={{
@@ -850,7 +863,214 @@ export default function DashboardRequestsPage() {
               </tbody>
             </table>
           </div>
-        )}
+
+          {/* Mobile Touch Cards Feed */}
+          <div
+            className="show-on-mobile-block"
+            id="mobile-requests-feed"
+            style={{ padding: '0.85rem' }}
+          >
+            {filteredRequests.map((req) => {
+              const cfg = STATUS_CONFIG[req.status] || STATUS_CONFIG['pending'];
+              return (
+                <div
+                  key={`mobile-${req.id}`}
+                  id={`mobile-request-card-${req.referenceId}`}
+                  className="glass-card"
+                  style={{
+                    padding: '1rem',
+                    borderRadius: 'var(--radius-lg)',
+                    border: `1px solid ${cfg.border}`,
+                    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                    marginBottom: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                  }}
+                >
+                  {/* Header: Ref ID, SLA badge & Status pill */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#2dd4bf', fontSize: '0.825rem' }}>
+                        {req.referenceId}
+                      </span>
+                      {req.status === 'pending' && (
+                        <span
+                          style={{
+                            fontSize: '0.68rem',
+                            padding: '0.15rem 0.45rem',
+                            borderRadius: '4px',
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            color: '#fbbf24',
+                            fontWeight: 700,
+                          }}
+                        >
+                          ⚡ 60m SLA
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        padding: '0.25rem 0.6rem',
+                        borderRadius: '9999px',
+                        backgroundColor: cfg.bg,
+                        border: `1px solid ${cfg.border}`,
+                        color: cfg.color,
+                        fontSize: '0.725rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: cfg.dot }} />
+                      {cfg.label}
+                    </span>
+                  </div>
+
+                  {/* Patient & Care Need */}
+                  <div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+                      {req.patientName} {req.patientAge ? `(${req.patientAge}y, ${req.patientGender})` : ''}
+                    </div>
+                    <div style={{ fontSize: '0.825rem', color: '#38bdf8', marginTop: '0.2rem', fontWeight: 500 }}>
+                      {(SERVICE_LABELS[req.serviceType] || req.serviceType)} • {(DURATION_LABELS[req.duration] || req.duration)}
+                    </div>
+                    {req.patientCondition && (
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.3rem', lineHeight: 1.4 }}>
+                        {req.patientCondition}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Location & Contact Info */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem',
+                      fontSize: '0.8rem',
+                      color: 'var(--text-secondary)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      padding: '0.6rem 0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span>📍</span>
+                      <span style={{ color: '#ffffff', fontWeight: 500 }}>{req.locality}, {req.district}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span>👤</span>
+                      <span>{req.contactName} ({req.relationship?.replace('_', ' ') || 'Family'}) • {req.phone}</span>
+                    </div>
+                  </div>
+
+                  {/* 1-Tap Action Buttons: Direct Phone Call & WhatsApp */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    <a
+                      href={`tel:${req.phone.replace(/[^0-9+]/g, '')}`}
+                      id={`mobile-call-${req.referenceId}`}
+                      style={{
+                        padding: '0.55rem',
+                        fontSize: '0.825rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        color: '#ffffff',
+                        backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                        border: '1px solid rgba(56, 189, 248, 0.35)',
+                        borderRadius: 'var(--radius-md)',
+                        textDecoration: 'none',
+                        minHeight: '44px',
+                      }}
+                    >
+                      <span>📞 Call Contact</span>
+                    </a>
+
+                    <a
+                      href={`https://wa.me/${req.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(
+                        req.contactName
+                      )}%2C%20this%20is%20the%20Nurse%20Coordinator%20regarding%20your%20care%20request%20(${
+                        req.referenceId
+                      }).`}
+                      target="_blank"
+                      rel="noreferrer"
+                      id={`mobile-wa-${req.referenceId}`}
+                      style={{
+                        padding: '0.55rem',
+                        fontSize: '0.825rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        color: '#ffffff',
+                        backgroundColor: '#16a34a',
+                        border: '1px solid #22c55e',
+                        borderRadius: 'var(--radius-md)',
+                        textDecoration: 'none',
+                        minHeight: '44px',
+                        boxShadow: '0 2px 8px rgba(34, 197, 94, 0.25)',
+                      }}
+                    >
+                      <span>💬 Chat on WhatsApp</span>
+                    </a>
+                  </div>
+
+                  {/* Secondary Actions: Details & Matching */}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => setSelectedRequest(req)}
+                      id={`mobile-details-${req.referenceId}`}
+                      className="btn-secondary"
+                      style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', minHeight: '40px' }}
+                    >
+                      View Details & History
+                    </button>
+
+                    {req.status === 'pending' && (
+                      <button
+                        onClick={() => handleUpdateStatus(req.id, 'contacted')}
+                        disabled={updatingId === req.id}
+                        className="btn-primary"
+                        id={`mobile-contacted-${req.referenceId}`}
+                        style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', minHeight: '40px' }}
+                      >
+                        Mark Contacted
+                      </button>
+                    )}
+
+                    {(req.status === 'contacted' || req.status === 'matched') && (
+                      <Link
+                        href={`/dashboard/matching?requestId=${req.id}&service=${req.serviceType}&district=${encodeURIComponent(
+                          req.district
+                        )}`}
+                        className="btn-primary"
+                        style={{
+                          flex: 1,
+                          padding: '0.5rem',
+                          fontSize: '0.8rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.3rem',
+                          minHeight: '40px',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <span>⚡ Match Nurse</span>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
       </div>
 
       {/* Details Slide-over Drawer */}
